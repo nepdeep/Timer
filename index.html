@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrono Terminal V4.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chrono Terminal V4.4 Mobile</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -36,7 +36,9 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
+            /* Prevent horizontal scroll on mobile */
             overflow-x: hidden;
+            width: 100%; 
         }
 
         /* --- LAYOUT GRID --- */
@@ -49,7 +51,7 @@
         /* --- SIDEBAR (SYSTEM CONFIG) --- */
         .sidebar {
             width: var(--sidebar-width);
-            background: rgba(10, 10, 15, 0.95);
+            background: rgba(10, 10, 15, 0.98);
             backdrop-filter: blur(20px);
             border-right: 1px solid var(--glass-border);
             height: 100vh;
@@ -57,16 +59,16 @@
             left: 0;
             top: 0;
             z-index: 100;
-            transform: translateX(-100%); /* Hidden by default */
+            transform: translateX(-100%);
             transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             padding: 20px;
             overflow-y: auto;
             box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+            /* Ensure sidebar works well on mobile */
+            padding-bottom: 80px; 
         }
 
-        .sidebar.open {
-            transform: translateX(0);
-        }
+        .sidebar.open { transform: translateX(0); }
 
         .sidebar-header {
             display: flex;
@@ -90,49 +92,41 @@
             color: var(--text-muted);
             font-size: 1.5rem;
             cursor: pointer;
-            padding: 0;
-            min-width: auto;
-            height: auto;
+            padding: 5px;
         }
-        .close-sidebar-btn:hover { color: var(--neon-red); transform: none; box-shadow: none; }
 
         /* --- MAIN CONTENT AREA --- */
         .main-stage {
             flex: 1;
-            padding: 40px 20px;
+            padding: 20px 15px; /* Reduced padding for mobile */
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            transition: margin-left 0.3s ease;
+            justify-content: center; /* Center vertically */
+            min-height: 100vh;
         }
 
-        /* Toggle Button (Hamburger) */
         .sidebar-toggle {
             position: fixed;
-            top: 20px;
-            left: 20px;
+            top: 15px;
+            left: 15px;
             z-index: 50;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             border: 1px solid var(--glass-border);
             color: var(--neon-blue);
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             backdrop-filter: blur(5px);
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             transition: all 0.2s;
         }
-        .sidebar-toggle:hover {
-            background: var(--neon-blue);
-            color: #000;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-        }
-
+        
         /* --- GLASS PANEL STYLES --- */
         .glass-panel {
             background: var(--glass-bg);
@@ -143,23 +137,11 @@
             padding: 30px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-width: 700px;
+            max-width: 600px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .glass-panel:hover {
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        /* --- PANEL HEADER (For Inputs & Fullscreen) --- */
-        .panel-header {
             display: flex;
-            width: 100%;
-            gap: 15px;
-            margin-bottom: 15px;
-            align-items: stretch; /* Ensures button matches height of select */
+            flex-direction: column;
         }
 
         /* --- FULLSCREEN UTILITY --- */
@@ -173,12 +155,10 @@
             z-index: 9999;
             border-radius: 0;
             border: none;
-            display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             background: #000;
-            padding: 50px;
+            padding: 20px;
         }
         
         .glass-panel.fullscreen-mode .panel-header {
@@ -187,30 +167,28 @@
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
-            max-width: 800px;
             z-index: 10;
+        }
+
+        .panel-header {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .fullscreen-btn {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
             color: var(--neon-blue);
-            width: 80px; /* Square-ish profile */
+            width: 50px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.5rem;
-            padding: 0;
-            margin: 0;
-            transition: 0.3s;
+            font-size: 1.2rem;
             flex-shrink: 0;
-        }
-        .fullscreen-btn:hover {
-            background: var(--neon-blue);
-            color: #000;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
         }
 
         @keyframes breathe {
@@ -219,7 +197,6 @@
         }
         .alive { animation: breathe 6s ease-in-out infinite; }
         .glass-panel.fullscreen-mode.alive { animation: none; }
-
 
         h3 {
             margin: 0 0 15px 0;
@@ -271,15 +248,7 @@
             color: var(--text-muted);
         }
         
-        #geoDisplay {
-            cursor: pointer;
-            border-bottom: 1px dotted rgba(255,255,255,0.2);
-            transition: color 0.2s;
-        }
-        #geoDisplay:hover {
-            color: var(--neon-blue);
-            border-bottom-color: var(--neon-blue);
-        }
+        #geoDisplay { cursor: pointer; border-bottom: 1px dotted rgba(255,255,255,0.2); }
 
         .world-grid {
             display: grid;
@@ -289,26 +258,9 @@
             padding: 10px;
             border-radius: 8px;
         }
-
-        .world-item {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .world-city {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-
-        .world-time {
-            font-family: var(--font-display);
-            font-size: 0.8rem;
-            color: var(--neon-blue);
-            white-space: nowrap;
-        }
+        .world-item { display: flex; flex-direction: column; }
+        .world-city { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+        .world-time { font-family: var(--font-display); font-size: 0.8rem; color: var(--neon-blue); }
 
         /* --- DIGITAL DISPLAY --- */
         .digital-display {
@@ -319,21 +271,13 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-align: center;
-            margin: 20px 0 0 0; 
+            margin: 10px 0 0 0; 
             letter-spacing: -3px;
             text-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
-            position: relative;
             line-height: 1.1;
         }
-
-        .glass-panel.fullscreen-mode .digital-display {
-            font-size: 15vw; 
-            margin-top: 0;
-        }
-        .glass-panel.fullscreen-mode .phase-indicator {
-            font-size: 2rem;
-        }
         
+        .glass-panel.fullscreen-mode .digital-display { font-size: 15vw; margin-top: 0; }
         .phase-indicator {
             font-family: var(--font-display);
             font-size: 1.1rem;
@@ -343,7 +287,7 @@
             text-align: center;
             min-height: 25px;
             margin-top: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-weight: 700;
         }
 
@@ -353,12 +297,10 @@
             height: 6px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
-            margin: 0 auto 25px auto;
+            margin: 0 auto 20px auto;
             overflow: hidden;
-            position: relative;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         .progress-fill {
             height: 100%;
             background: var(--neon-blue);
@@ -366,15 +308,9 @@
             box-shadow: 0 0 15px var(--neon-blue);
             transition: width 0.1s linear, background-color 0.3s ease;
         }
-        
         .progress-fill.low { background: var(--neon-red); box-shadow: 0 0 15px var(--neon-red); }
         .progress-fill.work-mode { background: var(--neon-green); box-shadow: 0 0 15px var(--neon-green); }
         .progress-fill.rest-mode { background: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); }
-
-        @media (max-width: 768px) {
-            .digital-display { font-size: 3.5rem; }
-            .sidebar { width: 85vw; }
-        }
 
         /* --- INPUTS --- */
         select { background-color: #000; color: var(--neon-blue); }
@@ -384,7 +320,7 @@
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
             color: var(--neon-blue);
-            padding: 24px;
+            padding: 24px; /* Default desktop padding */
             border-radius: 12px;
             font-family: var(--font-display);
             font-size: 1.8rem;
@@ -395,11 +331,7 @@
             cursor: pointer;
         }
         
-        /* Specific tweaks for Panel Header inputs */
-        .panel-header select {
-            margin-bottom: 0;
-            flex-grow: 1;
-        }
+        .panel-header select { margin-bottom: 0; flex-grow: 1; }
 
         .input-wrapper {
             display: flex;
@@ -416,43 +348,6 @@
             font-weight: 700;
         }
 
-        .audio-input-small {
-             padding: 10px !important;
-             font-size: 0.9rem !important;
-             margin-bottom: 0 !important;
-             height: 40px;
-             border: 1px solid var(--glass-border);
-        }
-
-        .freq-wrapper {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding-right: 15px;
-            flex: 1;
-            transition: 0.3s;
-            height: 40px;
-        }
-        .freq-wrapper:focus-within { border-color: var(--neon-blue); }
-        .freq-wrapper input {
-            border: none;
-            background: transparent;
-            box-shadow: none;
-            margin: 0;
-            height: 100%;
-            padding: 0 12px;
-            font-size: 0.9rem;
-            flex: 1;
-        }
-        .unit-label {
-            color: var(--text-muted);
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            user-select: none;
-        }
-
         .input-group-row {
             display: flex;
             gap: 15px;
@@ -463,10 +358,17 @@
         .controls {
             display: flex;
             gap: 15px;
-            margin-top: 15px;
+            margin-top: 5px;
             justify-content: center;
-            flex-wrap: wrap;
             width: 100%;
+            flex-wrap: wrap; /* Key for mobile */
+        }
+        
+        /* Specific control group wrappers */
+        .controls-btn-group {
+            width: 100%;
+            display: flex;
+            gap: 10px;
         }
 
         button {
@@ -483,23 +385,14 @@
             letter-spacing: 1px;
             transition: all 0.2s;
             flex: 1;
-            min-width: 100px;
+            min-width: 80px;
         }
         
-        .btn-small {
-            padding: 0 15px;
-            height: 40px;
-            min-width: 60px;
-            margin: 0;
-            flex: 0 0 auto;
-            font-size: 0.8rem;
-        }
-
         button:hover {
             background: var(--neon-blue);
             color: #000;
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
-            transform: scale(1.05);
+            transform: scale(1.02);
         }
 
         .btn-stop {
@@ -507,11 +400,7 @@
             color: var(--neon-red);
             background: rgba(255, 0, 85, 0.05);
         }
-        .btn-stop:hover {
-            background: var(--neon-red);
-            color: #fff;
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
-        }
+        .btn-stop:hover { background: var(--neon-red); color: #fff; box-shadow: 0 0 20px rgba(255, 0, 85, 0.6); }
 
         .btn-reset { color: var(--text-muted); border-color: var(--glass-border); }
         .btn-reset:hover { background: var(--text-muted); color: #000; }
@@ -541,107 +430,94 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0); }
         }
 
-        /* --- LAP LIST STYLING --- */
-        .laps-container {
-            width: 100%;
-            margin-top: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-            border-top: 1px dashed var(--glass-border);
-            padding-top: 10px;
-        }
+        /* --- AUDIO SETTINGS (SIDEBAR) --- */
+        .audio-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .audio-row-top { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .audio-row-top select { flex: 2; margin-bottom: 0; }
+        .audio-input-small { padding: 10px !important; font-size: 0.9rem !important; height: 40px; border: 1px solid var(--glass-border); }
+        .freq-wrapper { display: flex; align-items: center; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding-right: 15px; flex: 1; transition: 0.3s; height: 40px; }
+        .freq-wrapper input { border: none; background: transparent; box-shadow: none; margin: 0; height: 100%; padding: 0 12px; font-size: 0.9rem; flex: 1; }
+        .unit-label { color: var(--text-muted); font-family: var(--font-display); font-size: 0.85rem; user-select: none; }
+        .btn-small { padding: 0 15px; height: 40px; min-width: 60px; margin: 0; flex: 0 0 auto; font-size: 0.8rem; }
+        .audio-row-bottom { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
+        .decay-label { font-family: var(--font-display); font-size: 0.7rem; color: var(--text-muted); width: 90px; }
+        .decay-value { color: var(--neon-blue); font-weight: bold; }
         
+        /* SLIDERS */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; padding: 0; margin: 0; border: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--neon-blue); cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px var(--neon-blue); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: var(--glass-border); border-radius: 2px; }
+
+        /* --- LAP LIST --- */
+        .laps-container { width: 100%; margin-top: 15px; max-height: 150px; overflow-y: auto; border-top: 1px dashed var(--glass-border); padding-top: 10px; }
         .laps-container::-webkit-scrollbar { width: 6px; }
         .laps-container::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
-
-        .lap-row {
-            display: grid;
-            grid-template-columns: 0.5fr 1fr 1fr;
-            padding: 8px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        
-        .lap-row.header {
-            color: var(--neon-blue);
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            border-bottom: 1px solid var(--neon-blue);
-            margin-bottom: 5px;
-        }
-        
+        .lap-row { display: grid; grid-template-columns: 0.5fr 1fr 1fr; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted); }
+        .lap-row.header { color: var(--neon-blue); font-weight: bold; text-transform: uppercase; font-size: 0.75rem; border-bottom: 1px solid var(--neon-blue); margin-bottom: 5px; }
         .lap-split { color: var(--neon-purple); }
         .lap-total { color: #fff; }
 
         .hidden { display: none !important; }
-        
-        /* UPDATED AUDIO SETTINGS LAYOUT */
-        .audio-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .audio-row-top {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-        }
-        
-        .audio-row-top select { flex: 2; }
-        
-        .audio-row-bottom {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 10px;
-        }
-        
-        .decay-label {
-            font-family: var(--font-display);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-            width: 90px;
-        }
-        
-        .decay-value { color: var(--neon-blue); font-weight: bold; }
 
-        /* SLIDER STYLING */
-        input[type=range] {
-            -webkit-appearance: none; 
-            width: 100%; 
-            background: transparent; 
-            padding: 0;
-            margin: 0;
-            border: none;
-            cursor: pointer;
+        /* =========================================
+           MOBILE OPTIMIZATIONS
+           ========================================= */
+        @media (max-width: 768px) {
+            .sidebar { width: 85vw; }
+            
+            /* Compact the panel padding */
+            .glass-panel { padding: 20px 15px; }
+            
+            /* Shrink the huge inputs */
+            input, select {
+                padding: 12px 15px;
+                font-size: 1.2rem;
+                margin-bottom: 10px;
+                height: auto;
+            }
+            
+            /* Shrink digital display */
+            .digital-display { font-size: 3.5rem; margin-top: 0; }
+            
+            /* Mode selector smaller text */
+            #modeSelect { font-size: 1rem; padding: 10px; }
+            
+            /* --- BUTTON LAYOUT FIXES --- */
+            
+            /* Force Interval inputs to stack vertically */
+            #intervalControls .input-group-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            /* Make buttons a 2x2 grid on mobile for Stopwatch/Countdown/Interval */
+            .controls-btn-group {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            /* Buttons smaller text/padding */
+            button {
+                padding: 12px 10px;
+                font-size: 0.9rem;
+                width: 100%; /* Fill grid cell */
+                min-width: 0;
+            }
+            
+            /* Full width for single buttons */
+            #setAlarmBtn, #disableAlarmBtn, #snoozeBtn {
+                grid-column: span 2; 
+            }
+            
+            /* Adjust Lap List height so it doesn't push off screen */
+            .laps-container { max-height: 120px; }
         }
-        
-        input[type=range]:focus { box-shadow: none; border: none; }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: var(--neon-blue);
-            cursor: pointer;
-            margin-top: -6px; 
-            box-shadow: 0 0 10px var(--neon-blue);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: var(--glass-border);
-            border-radius: 2px;
+
+        /* Tiny screens (SE, Fold) */
+        @media (max-width: 380px) {
+            .digital-display { font-size: 2.8rem; }
+            button { font-size: 0.8rem; padding: 10px; }
         }
 
     </style>
@@ -742,21 +618,25 @@
                     <input type="number" id="cdMinutes" min="0" placeholder="Min">
                     <input type="number" id="cdSeconds" min="0" max="59" placeholder="Sec">
                 </div>
-                <div style="width: 100%; display: flex; gap: 10px;">
+                <div class="controls-btn-group">
                     <button id="startCountdownBtn">Start</button>
                     <button id="stopCountdownBtn" class="btn-stop">Stop</button>
-                    <button id="resetCountdownBtn" class="btn-reset">Reset</button>
+                    <button id="resetCountdownBtn" class="btn-reset" style="grid-column: span 2;">Reset</button>
                 </div>
             </div>
 
             <div id="alarmControls" class="controls hidden">
                 <input type="time" id="alarmTime" style="text-align: center; color-scheme: dark;">
-                <button id="setAlarmBtn" style="width: 100%; margin-top: 10px;">Set Alarm</button>
+                <div class="controls-btn-group">
+                    <button id="setAlarmBtn" style="width: 100%; margin-top: 10px; grid-column: span 2;">Set Alarm</button>
+                </div>
                 
                 <div id="alarmActiveUI" class="hidden" style="width: 100%;">
                     <div style="text-align: center; color: var(--neon-red); margin: 10px 0; font-weight: bold; font-size: 1.5rem;">ALARM ARMED</div>
-                    <button id="snoozeBtn" class="btn-snooze hidden">SNOOZE (5 MIN)</button>
-                    <button id="disableAlarmBtn" class="btn-stop" style="width: 100%; margin-top: 10px;">Dismiss Alarm</button>
+                    <div class="controls-btn-group">
+                        <button id="snoozeBtn" class="btn-snooze hidden" style="grid-column: span 2;">SNOOZE (5 MIN)</button>
+                        <button id="disableAlarmBtn" class="btn-stop" style="width: 100%; margin-top: 10px; grid-column: span 2;">Dismiss Alarm</button>
+                    </div>
                 </div>
             </div>
 
@@ -775,15 +655,15 @@
                         <input type="number" id="intRounds" placeholder="5" value="5">
                     </div>
                 </div>
-                <div style="width: 100%; display: flex; gap: 10px;">
-                    <button id="startIntervalBtn">Start Interval</button>
+                <div class="controls-btn-group">
+                    <button id="startIntervalBtn">Start</button>
                     <button id="stopIntervalBtn" class="btn-stop">Stop</button>
-                    <button id="resetIntervalBtn" class="btn-reset">Reset</button>
+                    <button id="resetIntervalBtn" class="btn-reset" style="grid-column: span 2;">Reset</button>
                 </div>
             </div>
 
-            <div id="stopwatchControls" class="controls hidden" style="flex-wrap: wrap;">
-                <div style="width: 100%; display: flex; gap: 10px;">
+            <div id="stopwatchControls" class="controls hidden">
+                <div class="controls-btn-group">
                     <button id="startSwBtn">Start</button>
                     <button id="lapSwBtn" class="btn-lap">Lap</button>
                     <button id="stopSwBtn" class="btn-stop">Stop</button>
@@ -1212,7 +1092,7 @@
         document.getElementById('setAlarmBtn').onclick = () => {
             if(els.alarmInput.value) {
                 alarmTargetTime = els.alarmInput.value;
-                document.getElementById('setAlarmBtn').classList.add('hidden');
+                document.getElementById('setAlarmBtn').parentElement.classList.add('hidden'); // Hide wrapper
                 els.alarmActiveUI.classList.remove('hidden');
                 els.snoozeBtn.classList.add('hidden');
             }
@@ -1221,7 +1101,7 @@
             stopAlarmSound();
             alarmTargetTime = null;
             els.alarmActiveUI.classList.add('hidden');
-            document.getElementById('setAlarmBtn').classList.remove('hidden');
+            document.getElementById('setAlarmBtn').parentElement.classList.remove('hidden'); // Show wrapper
         };
         document.getElementById('snoozeBtn').onclick = () => {
             stopAlarmSound();
