@@ -165,9 +165,19 @@
             position: absolute;
             top: 20px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) translateY(-100px); /* Move up out of view by default */
             width: 90%;
-            z-index: 10;
+            z-index: 1001; /* Above trigger zone */
+            opacity: 0; /* Hidden by default */
+            pointer-events: none; /* No interaction when hidden */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* When revealed via JS class */
+        .glass-panel.fullscreen-mode .panel-header.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .panel-header {
@@ -176,6 +186,43 @@
             gap: 10px;
             margin-bottom: 10px;
         }
+
+        /* --- FULLSCREEN TRIGGER ZONES --- */
+        .fs-top-trigger {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px; /* Area to click */
+            z-index: 1000;
+            display: none;
+            cursor: pointer;
+        }
+
+        .fs-handle {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+            letter-spacing: 2px;
+            line-height: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: background 0.2s;
+        }
+        .fs-handle:hover { background: rgba(0, 243, 255, 0.3); color: #fff; }
+
+        .glass-panel.fullscreen-mode .fs-top-trigger { display: block; }
+
 
         .fullscreen-btn {
             background: rgba(0, 0, 0, 0.3);
@@ -593,7 +640,11 @@
     <div class="main-stage">
         <div id="mainPanel" class="glass-panel alive">
             
-            <div class="panel-header">
+            <div id="fsTopTrigger" class="fs-top-trigger">
+                <div class="fs-handle">---</div>
+            </div>
+
+            <div id="panelHeader" class="panel-header">
                 <select id="modeSelect">
                     <option value="countdown">1. Timer (Countdown)</option>
                     <option value="alarm">2. Alarm Clock</option>
@@ -691,6 +742,8 @@
         const closeSidebar = document.getElementById('closeSidebar');
         const mainPanel = document.getElementById('mainPanel');
         const fullscreenBtn = document.getElementById('fullscreenToggle');
+        const panelHeader = document.getElementById('panelHeader');
+        const fsTopTrigger = document.getElementById('fsTopTrigger');
 
         function toggleSidebar() {
             sidebar.classList.toggle('open');
@@ -741,6 +794,26 @@
                 mainPanel.classList.add('fullscreen-mode');
             } else {
                 mainPanel.classList.remove('fullscreen-mode');
+                // Ensure header is visible when leaving fullscreen
+                panelHeader.classList.remove('visible'); 
+            }
+        });
+
+        // Toggle Header Visibility in Fullscreen
+        fsTopTrigger.addEventListener('click', (e) => {
+            panelHeader.classList.add('visible');
+            e.stopPropagation();
+        });
+
+        // Hide header if clicking elsewhere in fullscreen
+        mainPanel.addEventListener('click', (e) => {
+            if (mainPanel.classList.contains('fullscreen-mode')) {
+                // If we clicked inside the header or the trigger, do nothing
+                if (e.target.closest('.panel-header') || e.target.closest('.fs-top-trigger')) {
+                    return;
+                }
+                // Otherwise hide it
+                panelHeader.classList.remove('visible');
             }
         });
 
@@ -830,15 +903,8 @@
             els.geo.innerHTML = `LAT: ${userLat} // LON: ${userLon} // UTC${displaySign}${utcOffsetHours}`;
         }
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                updateGeoDisplay(position.coords.latitude, position.coords.longitude);
-            }, (err) => {
-                updateGeoDisplay(0.00, 0.00); 
-            });
-        } else {
-            updateGeoDisplay(0.00, 0.00);
-        }
+        // Default to 0,0
+        updateGeoDisplay(0.00, 0.00);
 
         // --- EDITING COORDINATES ---
         els.geo.addEventListener('dblclick', () => {
