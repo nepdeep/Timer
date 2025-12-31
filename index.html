@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chrono Terminal V4.4 Mobile</title>
+    <title>Chrono Terminal V5.4 - Synced</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* Cyber-Glass Palette */
+            /* Cyber-Glass Palette (Dark Default) */
             --bg-dark: #050505;
             --glass-bg: rgba(20, 20, 30, 0.7);
             --glass-border: rgba(255, 255, 255, 0.08);
@@ -19,10 +19,47 @@
             --neon-purple: #bd00ff;
             --text-primary: #ffffff;
             --text-muted: #8899a6;
+            --input-bg: rgba(0, 0, 0, 0.3);
             --font-display: 'JetBrains Mono', monospace;
             --font-body: 'Inter', sans-serif;
             --sidebar-width: 320px;
+            --sidebar-bg: rgba(10, 10, 15, 0.98);
         }
+
+        /* --- LIGHT MODE OVERRIDES --- */
+        body.light-mode {
+            --bg-dark: #eef2f6;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-primary: #1a202c;
+            --text-muted: #586878;
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --sidebar-bg: rgba(240, 240, 245, 0.98);
+            --neon-blue: #008eb3;
+            --neon-green: #00a86b;
+            --neon-red: #d60047;
+            --neon-yellow: #ccb800;
+            --neon-purple: #9000c4;
+        }
+
+        body.light-mode body {
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.05), transparent 25%);
+        }
+
+        body.light-mode .digital-display {
+            background: linear-gradient(180deg, #1a202c, #4a5568);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .sidebar-title { color: var(--text-primary); }
+        body.light-mode select { background-color: #fff; color: var(--text-primary); }
+        body.light-mode select option { background-color: #fff; color: #000; }
+        body.light-mode .lap-total { color: var(--text-primary); }
+        
+        /* --- END LIGHT MODE --- */
 
         * { box-sizing: border-box; }
 
@@ -36,9 +73,9 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            /* Prevent horizontal scroll on mobile */
             overflow-x: hidden;
             width: 100%; 
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* --- LAYOUT GRID --- */
@@ -48,10 +85,10 @@
             position: relative;
         }
 
-        /* --- SIDEBAR (SYSTEM CONFIG) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             width: var(--sidebar-width);
-            background: rgba(10, 10, 15, 0.98);
+            background: var(--sidebar-bg);
             backdrop-filter: blur(20px);
             border-right: 1px solid var(--glass-border);
             height: 100vh;
@@ -60,11 +97,10 @@
             top: 0;
             z-index: 100;
             transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), background 0.3s;
             padding: 20px;
             overflow-y: auto;
-            box-shadow: 5px 0 20px rgba(0,0,0,0.5);
-            /* Ensure sidebar works well on mobile */
+            box-shadow: 5px 0 20px rgba(0,0,0,0.1);
             padding-bottom: 80px; 
         }
 
@@ -95,15 +131,15 @@
             padding: 5px;
         }
 
-        /* --- MAIN CONTENT AREA --- */
+        /* --- MAIN STAGE --- */
         .main-stage {
             flex: 1;
-            padding: 20px 15px; /* Reduced padding for mobile */
+            padding: 20px 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            justify-content: center; /* Center vertically */
+            justify-content: center;
             min-height: 100vh;
         }
 
@@ -112,7 +148,7 @@
             top: 15px;
             left: 15px;
             z-index: 50;
-            background: rgba(0, 0, 0, 0.6);
+            background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: var(--neon-blue);
             width: 40px;
@@ -127,7 +163,7 @@
             transition: all 0.2s;
         }
         
-        /* --- GLASS PANEL STYLES --- */
+        /* --- GLASS PANEL --- */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -135,16 +171,48 @@
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
             width: 100%;
             max-width: 600px;
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            transition: background 0.3s, border 0.3s, box-shadow 0.1s;
         }
 
-        /* --- FULLSCREEN UTILITY --- */
+        /* VISUALIZER CLASS (Single blip) */
+        .glass-panel.audio-active {
+            box-shadow: 0 0 30px var(--neon-blue), inset 0 0 20px rgba(0, 243, 255, 0.2);
+            border-color: var(--neon-blue);
+        }
+
+        /* ALARM SYNCED ANIMATION 
+           Uses an "Attack-Decay" curve to match the sound envelope 
+           Start Bright -> Fade to Dim
+        */
+        @keyframes alarm-flash {
+            0% { 
+                box-shadow: 0 0 80px var(--neon-red), inset 0 0 50px rgba(255, 0, 85, 0.5); 
+                border-color: var(--neon-red); 
+                transform: scale(1.005);
+            }
+            100% { 
+                box-shadow: 0 0 10px var(--neon-red), inset 0 0 5px rgba(255, 0, 85, 0.05); 
+                border-color: rgba(255, 0, 85, 0.3); 
+                transform: scale(1);
+            }
+        }
+
+        .glass-panel.alarm-breathing {
+            /* Duration is set via JS to match Audio Decay */
+            animation-name: alarm-flash;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-out; 
+            border-color: var(--neon-red);
+        }
+
+        /* --- FULLSCREEN --- */
         .glass-panel.fullscreen-mode {
             position: fixed;
             top: 0;
@@ -157,7 +225,7 @@
             border: none;
             justify-content: center;
             align-items: center;
-            background: #000;
+            background: var(--bg-dark);
             padding: 20px;
         }
         
@@ -165,15 +233,14 @@
             position: absolute;
             top: 20px;
             left: 50%;
-            transform: translateX(-50%) translateY(-100px); /* Move up out of view by default */
+            transform: translateX(-50%) translateY(-100px);
             width: 90%;
-            z-index: 1001; /* Above trigger zone */
-            opacity: 0; /* Hidden by default */
-            pointer-events: none; /* No interaction when hidden */
+            z-index: 1001;
+            opacity: 0;
+            pointer-events: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* When revealed via JS class */
         .glass-panel.fullscreen-mode .panel-header.visible {
             transform: translateX(-50%) translateY(0);
             opacity: 1;
@@ -187,13 +254,12 @@
             margin-bottom: 10px;
         }
 
-        /* --- FULLSCREEN TRIGGER ZONES --- */
         .fs-top-trigger {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 40px; /* Area to click */
+            height: 40px;
             z-index: 1000;
             display: none;
             cursor: pointer;
@@ -206,26 +272,25 @@
             transform: translateX(-50%);
             width: 60px;
             height: 15px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--glass-border);
             border-bottom-left-radius: 8px;
             border-bottom-right-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: rgba(255,255,255,0.4);
+            color: var(--text-muted);
             font-size: 10px;
             letter-spacing: 2px;
             line-height: 0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             transition: background 0.2s;
         }
-        .fs-handle:hover { background: rgba(0, 243, 255, 0.3); color: #fff; }
+        .fs-handle:hover { background: var(--neon-blue); color: #fff; }
 
         .glass-panel.fullscreen-mode .fs-top-trigger { display: block; }
 
-
         .fullscreen-btn {
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--input-bg);
             border: 1px solid var(--glass-border);
             color: var(--neon-blue);
             width: 50px;
@@ -252,11 +317,11 @@
             letter-spacing: 2px;
             color: var(--text-muted);
             font-size: 0.8rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--glass-border);
             padding-bottom: 8px;
         }
 
-        /* --- CLOCK SECTION --- */
+        /* --- CLOCK & GEO --- */
         .time-section {
             margin-top: 20px;
             padding-top: 15px;
@@ -283,7 +348,7 @@
             font-family: var(--font-display);
             font-size: 1.2rem;
             font-weight: 700;
-            color: #fff;
+            color: var(--text-primary);
         }
 
         .geo-row {
@@ -295,19 +360,78 @@
             color: var(--text-muted);
         }
         
-        #geoDisplay { cursor: pointer; border-bottom: 1px dotted rgba(255,255,255,0.2); }
+        #geoDisplay { cursor: pointer; border-bottom: 1px dotted var(--text-muted); }
 
+        /* --- SELECTABLE WORLD GRID --- */
         .world-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 8px;
+            margin-top: 10px;
         }
-        .world-item { display: flex; flex-direction: column; }
-        .world-city { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
-        .world-time { font-family: var(--font-display); font-size: 0.8rem; color: var(--neon-blue); }
+
+        .world-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            /* Override standard button styles */
+            height: auto;
+            min-width: auto;
+            color: var(--text-primary);
+            font-weight: normal;
+            letter-spacing: normal;
+        }
+
+        .world-btn:hover {
+            border-color: var(--neon-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .world-btn.active {
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        .world-btn.active::after {
+            content: 'ACTIVE';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.5rem;
+            color: var(--neon-blue);
+            font-weight: bold;
+            font-family: var(--font-display);
+        }
+
+        .world-city {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            font-weight: 700;
+            font-family: var(--font-display);
+        }
+
+        .world-time {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        
+        .world-btn.active .world-time {
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
 
         /* --- DIGITAL DISPLAY --- */
         .digital-display {
@@ -325,6 +449,7 @@
         }
         
         .glass-panel.fullscreen-mode .digital-display { font-size: 15vw; margin-top: 0; }
+        
         .phase-indicator {
             font-family: var(--font-display);
             font-size: 1.1rem;
@@ -342,11 +467,11 @@
         .progress-track {
             width: 100%;
             height: 6px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--glass-border);
             border-radius: 4px;
             margin: 0 auto 20px auto;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
         }
         .progress-fill {
             height: 100%;
@@ -364,10 +489,10 @@
         select option { background-color: #000; color: #fff; }
 
         input, select {
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--input-bg);
             border: 1px solid var(--glass-border);
             color: var(--neon-blue);
-            padding: 24px; /* Default desktop padding */
+            padding: 24px; 
             border-radius: 12px;
             font-family: var(--font-display);
             font-size: 1.8rem;
@@ -380,12 +505,7 @@
         
         .panel-header select { margin-bottom: 0; flex-grow: 1; }
 
-        .input-wrapper {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
+        .input-wrapper { display: flex; flex-direction: column; flex: 1; }
         .input-label {
             font-family: var(--font-display);
             font-size: 0.75rem;
@@ -395,11 +515,7 @@
             font-weight: 700;
         }
 
-        .input-group-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
+        .input-group-row { display: flex; gap: 15px; margin-bottom: 10px; }
 
         /* --- BUTTONS --- */
         .controls {
@@ -408,15 +524,10 @@
             margin-top: 5px;
             justify-content: center;
             width: 100%;
-            flex-wrap: wrap; /* Key for mobile */
+            flex-wrap: wrap; 
         }
         
-        /* Specific control group wrappers */
-        .controls-btn-group {
-            width: 100%;
-            display: flex;
-            gap: 10px;
-        }
+        .controls-btn-group { width: 100%; display: flex; gap: 10px; }
 
         button {
             background: rgba(0, 243, 255, 0.05);
@@ -441,6 +552,45 @@
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
             transform: scale(1.02);
         }
+
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 20px;
+        }
+        
+        .theme-label { font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); }
+
+        /* SWITCH */
+        .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; margin: 0; padding: 0;}
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--glass-border);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--glass-border);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--text-muted);
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--neon-blue); }
+        input:checked + .slider:before { transform: translateX(16px); background-color: #fff; }
 
         .btn-stop {
             border-color: rgba(255, 0, 85, 0.5);
@@ -477,20 +627,28 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0); }
         }
 
-        /* --- AUDIO SETTINGS (SIDEBAR) --- */
+        /* --- AUDIO SETTINGS --- */
         .audio-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .audio-row-top { display: flex; align-items: center; gap: 10px; width: 100%; }
         .audio-row-top select { flex: 2; margin-bottom: 0; }
         .audio-input-small { padding: 10px !important; font-size: 0.9rem !important; height: 40px; border: 1px solid var(--glass-border); }
-        .freq-wrapper { display: flex; align-items: center; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding-right: 15px; flex: 1; transition: 0.3s; height: 40px; }
+        .freq-wrapper { display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding-right: 15px; flex: 1; transition: 0.3s; height: 40px; }
         .freq-wrapper input { border: none; background: transparent; box-shadow: none; margin: 0; height: 100%; padding: 0 12px; font-size: 0.9rem; flex: 1; }
         .unit-label { color: var(--text-muted); font-family: var(--font-display); font-size: 0.85rem; user-select: none; }
         .btn-small { padding: 0 15px; height: 40px; min-width: 60px; margin: 0; flex: 0 0 auto; font-size: 0.8rem; }
-        .audio-row-bottom { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
+        .audio-row-bottom { display: flex; align-items: center; gap: 10px; background: var(--input-bg); padding: 10px; border-radius: 10px; }
         .decay-label { font-family: var(--font-display); font-size: 0.7rem; color: var(--text-muted); width: 90px; }
         .decay-value { color: var(--neon-blue); font-weight: bold; }
         
-        /* SLIDERS */
+        /* AUDIO PRESETS */
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+        .btn-preset { padding: 8px; font-size: 0.7rem; border-color: var(--glass-border); color: var(--text-muted); background: transparent; }
+        .btn-preset:hover { border-color: var(--neon-blue); color: var(--neon-blue); background: rgba(0, 243, 255, 0.05); }
+
+        /* MUTE TOGGLE */
+        .mute-btn { width: 100%; margin-top: 5px; border-color: var(--glass-border); color: var(--text-muted); font-size: 0.8rem; padding: 8px; }
+        .mute-btn.muted { color: var(--neon-red); border-color: var(--neon-red); background: rgba(255, 0, 85, 0.1); }
+
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; padding: 0; margin: 0; border: none; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--neon-blue); cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px var(--neon-blue); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: var(--glass-border); border-radius: 2px; }
@@ -499,10 +657,10 @@
         .laps-container { width: 100%; margin-top: 15px; max-height: 150px; overflow-y: auto; border-top: 1px dashed var(--glass-border); padding-top: 10px; }
         .laps-container::-webkit-scrollbar { width: 6px; }
         .laps-container::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
-        .lap-row { display: grid; grid-template-columns: 0.5fr 1fr 1fr; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted); }
+        .lap-row { display: grid; grid-template-columns: 0.5fr 1fr 1fr; padding: 8px 10px; border-bottom: 1px solid var(--glass-border); font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted); }
         .lap-row.header { color: var(--neon-blue); font-weight: bold; text-transform: uppercase; font-size: 0.75rem; border-bottom: 1px solid var(--neon-blue); margin-bottom: 5px; }
         .lap-split { color: var(--neon-purple); }
-        .lap-total { color: #fff; }
+        .lap-total { color: var(--text-primary); }
 
         .hidden { display: none !important; }
 
@@ -511,57 +669,16 @@
            ========================================= */
         @media (max-width: 768px) {
             .sidebar { width: 85vw; }
-            
-            /* Compact the panel padding */
             .glass-panel { padding: 20px 15px; }
-            
-            /* Shrink the huge inputs */
-            input, select {
-                padding: 12px 15px;
-                font-size: 1.2rem;
-                margin-bottom: 10px;
-                height: auto;
-            }
-            
-            /* Shrink digital display */
+            input, select { padding: 12px 15px; font-size: 1.2rem; margin-bottom: 10px; height: auto; }
             .digital-display { font-size: 3.5rem; margin-top: 0; }
-            
-            /* Mode selector smaller text */
             #modeSelect { font-size: 1rem; padding: 10px; }
-            
-            /* --- BUTTON LAYOUT FIXES --- */
-            
-            /* Force Interval inputs to stack vertically */
-            #intervalControls .input-group-row {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            /* Make buttons a 2x2 grid on mobile for Stopwatch/Countdown/Interval */
-            .controls-btn-group {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-            
-            /* Buttons smaller text/padding */
-            button {
-                padding: 12px 10px;
-                font-size: 0.9rem;
-                width: 100%; /* Fill grid cell */
-                min-width: 0;
-            }
-            
-            /* Full width for single buttons */
-            #setAlarmBtn, #disableAlarmBtn, #snoozeBtn {
-                grid-column: span 2; 
-            }
-            
-            /* Adjust Lap List height so it doesn't push off screen */
+            #intervalControls .input-group-row { flex-direction: column; gap: 5px; }
+            .controls-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            button { padding: 12px 10px; font-size: 0.9rem; width: 100%; min-width: 0; }
+            #setAlarmBtn, #disableAlarmBtn, #snoozeBtn { grid-column: span 2; }
             .laps-container { max-height: 120px; }
         }
-
-        /* Tiny screens (SE, Fold) */
         @media (max-width: 380px) {
             .digital-display { font-size: 2.8rem; }
             button { font-size: 0.8rem; padding: 10px; }
@@ -581,8 +698,24 @@
             <button id="closeSidebar" class="close-sidebar-btn">×</button>
         </div>
 
+        <h3>Theme Settings</h3>
+        <div class="theme-toggle-container">
+            <span class="theme-label">Light Mode</span>
+            <label class="switch">
+                <input type="checkbox" id="themeSwitch">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <div class="audio-container">
             <h3>Audio Synth</h3>
+            
+            <div class="preset-grid">
+                <button class="btn-preset" id="presetZen">ZEN</button>
+                <button class="btn-preset" id="presetAlert">ALERT</button>
+                <button class="btn-preset" id="presetRetro">RETRO</button>
+            </div>
+
             <div class="audio-row-top">
                 <select id="waveType" class="audio-input-small" aria-label="Waveform type">
                     <option value="sine">Sine</option>
@@ -604,12 +737,14 @@
                 <span class="decay-label">Decay: <span id="decayValue" class="decay-value">2.0s</span></span>
                 <input type="range" id="decaySlider" min="0.5" max="10" step="0.1" value="2.0">
             </div>
+
+            <button id="muteBtn" class="mute-btn">Mute Sound (M)</button>
         </div>
 
         <div class="time-section">
             <h3>Global Time</h3>
             <div class="main-time-row">
-                <span class="current-time-label">Local Time:</span>
+                <span id="zoneLabel" class="current-time-label">GMT TIME:</span>
                 <span id="localTime" class="local-time">--:--:--</span>
             </div>
             <div class="geo-row">
@@ -617,22 +752,26 @@
             </div>
 
             <div class="world-grid">
-                <div class="world-item">
+                <button class="world-btn active" id="btnGMT" data-zone="UTC">
+                    <span class="world-city">GMT (UTC)</span>
+                    <span id="timeGMT" class="world-time">--:--</span>
+                </button>
+                <button class="world-btn" id="btnAMS" data-zone="Europe/Amsterdam">
                     <span class="world-city">Amsterdam</span>
                     <span id="timeAMS" class="world-time">--:--</span>
-                </div>
-                <div class="world-item">
+                </button>
+                <button class="world-btn" id="btnKTM" data-zone="Asia/Kathmandu">
                     <span class="world-city">Kathmandu</span>
                     <span id="timeKTM" class="world-time">--:--</span>
-                </div>
-                <div class="world-item">
+                </button>
+                <button class="world-btn" id="btnLA" data-zone="America/Los_Angeles">
                     <span class="world-city">California</span>
                     <span id="timeLA" class="world-time">--:--</span>
-                </div>
-                <div class="world-item">
+                </button>
+                <button class="world-btn" id="btnMEL" data-zone="Australia/Melbourne">
                     <span class="world-city">Melbourne</span>
                     <span id="timeMEL" class="world-time">--:--</span>
-                </div>
+                </button>
             </div>
         </div>
     </div>
@@ -652,7 +791,7 @@
                     <option value="stopwatch">4. Stopwatch</option>
                 </select>
 
-                <button id="fullscreenToggle" class="fullscreen-btn" title="Toggle Fullscreen">
+                <button id="fullscreenToggle" class="fullscreen-btn" title="Toggle Fullscreen (F)">
                     &#x26F6;
                 </button>
             </div>
@@ -672,7 +811,7 @@
                 <div class="controls-btn-group">
                     <button id="startCountdownBtn">Start</button>
                     <button id="stopCountdownBtn" class="btn-stop">Stop</button>
-                    <button id="resetCountdownBtn" class="btn-reset" style="grid-column: span 2;">Reset</button>
+                    <button id="resetCountdownBtn" class="btn-reset" style="grid-column: span 2;">Reset (R)</button>
                 </div>
             </div>
 
@@ -709,16 +848,16 @@
                 <div class="controls-btn-group">
                     <button id="startIntervalBtn">Start</button>
                     <button id="stopIntervalBtn" class="btn-stop">Stop</button>
-                    <button id="resetIntervalBtn" class="btn-reset" style="grid-column: span 2;">Reset</button>
+                    <button id="resetIntervalBtn" class="btn-reset" style="grid-column: span 2;">Reset (R)</button>
                 </div>
             </div>
 
             <div id="stopwatchControls" class="controls hidden">
                 <div class="controls-btn-group">
                     <button id="startSwBtn">Start</button>
-                    <button id="lapSwBtn" class="btn-lap">Lap</button>
+                    <button id="lapSwBtn" class="btn-lap">Lap (L)</button>
                     <button id="stopSwBtn" class="btn-stop">Stop</button>
-                    <button id="resetSwBtn" class="btn-reset">Reset</button>
+                    <button id="resetSwBtn" class="btn-reset">Reset (R)</button>
                 </div>
                 
                 <div id="lapsContainer" class="laps-container hidden">
@@ -744,110 +883,90 @@
         const fullscreenBtn = document.getElementById('fullscreenToggle');
         const panelHeader = document.getElementById('panelHeader');
         const fsTopTrigger = document.getElementById('fsTopTrigger');
+        const themeSwitch = document.getElementById('themeSwitch');
+
+        // --- VARIABLES ---
+        let wakeLock = null;
+        let isMuted = false;
+        
+        // Timezone selection state
+        let selectedZone = 'UTC';
+        let selectedZoneLabel = 'GMT TIME';
+
+        // Theme Toggle Logic
+        themeSwitch.addEventListener('change', (e) => {
+            if(e.target.checked) document.body.classList.add('light-mode');
+            else document.body.classList.remove('light-mode');
+        });
 
         function toggleSidebar() {
             sidebar.classList.toggle('open');
-            // Visual feedback on toggle button
-            if(sidebar.classList.contains('open')) {
-                sidebarToggle.style.opacity = '0'; // Hide toggle when open
-            } else {
-                sidebarToggle.style.opacity = '1';
-            }
+            sidebarToggle.style.opacity = sidebar.classList.contains('open') ? '0' : '1';
         }
 
-        // Sidebar Listeners
-        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarToggle.addEventListener('click', () => { triggerHaptic(); toggleSidebar(); });
         closeSidebar.addEventListener('click', toggleSidebar);
         document.addEventListener('click', (e) => {
-            if(sidebar.classList.contains('open') && 
-               !sidebar.contains(e.target) && 
-               !sidebarToggle.contains(e.target)) {
+            if(sidebar.classList.contains('open') && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
                 toggleSidebar();
             }
         });
         
-        // Fullscreen Logic
-        fullscreenBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                // Try browser native fullscreen first
-                if(mainPanel.requestFullscreen) {
-                    mainPanel.requestFullscreen().catch(err => {
-                        // Fallback to CSS fullscreen
-                        mainPanel.classList.toggle('fullscreen-mode');
-                    });
-                } else {
-                     // CSS Fallback
-                     mainPanel.classList.toggle('fullscreen-mode');
-                }
-            } else {
-                if(document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else {
-                    mainPanel.classList.toggle('fullscreen-mode');
-                }
-            }
-        });
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-        // Detect native fullscreen change to add/remove CSS class for styling
-        document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement) {
-                mainPanel.classList.add('fullscreen-mode');
+        function toggleFullscreen() {
+            triggerHaptic();
+            if (!document.fullscreenElement) {
+                if(mainPanel.requestFullscreen) mainPanel.requestFullscreen().catch(err => mainPanel.classList.toggle('fullscreen-mode'));
+                else mainPanel.classList.toggle('fullscreen-mode');
             } else {
+                if(document.exitFullscreen) document.exitFullscreen();
+                else mainPanel.classList.toggle('fullscreen-mode');
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) mainPanel.classList.add('fullscreen-mode');
+            else {
                 mainPanel.classList.remove('fullscreen-mode');
-                // Ensure header is visible when leaving fullscreen
                 panelHeader.classList.remove('visible'); 
             }
         });
 
-        // Toggle Header Visibility in Fullscreen
         fsTopTrigger.addEventListener('click', (e) => {
             panelHeader.classList.add('visible');
             e.stopPropagation();
         });
 
-        // Hide header if clicking elsewhere in fullscreen
         mainPanel.addEventListener('click', (e) => {
             if (mainPanel.classList.contains('fullscreen-mode')) {
-                // If we clicked inside the header or the trigger, do nothing
-                if (e.target.closest('.panel-header') || e.target.closest('.fs-top-trigger')) {
-                    return;
-                }
-                // Otherwise hide it
+                if (e.target.closest('.panel-header') || e.target.closest('.fs-top-trigger')) return;
                 panelHeader.classList.remove('visible');
             }
         });
 
 
-        // --- STATE VARIABLES ---
+        // --- TIMER VARIABLES ---
         let timerInterval;
         let isRunning = false;
         let mode = 'countdown'; 
         let initialCountdownTotal = 0; 
         
-        // Geo & Time variables
         let userLat = 0.00;
         let userLon = 0.00;
-        let utcOffsetHours = 0; 
 
         let currentTimeMs = 0; 
         let alarmTargetTime = null;
         let isAlarmRinging = false;
         
         let intervalState = {
-            workTime: 30, 
-            restTime: 10, 
-            totalRounds: 5, 
-            currentRound: 1, 
-            phase: 'WORK', 
-            timeLeft: 0,
-            totalDuration: 0 
+            workTime: 30, restTime: 10, totalRounds: 5, currentRound: 1, 
+            phase: 'WORK', timeLeft: 0, totalDuration: 0 
         };
 
-        // Stopwatch State
         let laps = [];
         let lastLapTimeMs = 0;
 
-        // Audio Context & Config
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioConfig = { type: 'sine', freq: 90 };
         let beepLoop = null;
@@ -860,17 +979,30 @@
             progContainer: document.getElementById('progressContainer'),
             progBar: document.getElementById('progressBar'),
             localTime: document.getElementById('localTime'),
+            zoneLabel: document.getElementById('zoneLabel'),
             geo: document.getElementById('geoDisplay'),
-            ams: document.getElementById('timeAMS'),
-            ktm: document.getElementById('timeKTM'),
-            la: document.getElementById('timeLA'),
-            mel: document.getElementById('timeMEL'),
+            
+            // World Times
+            timeGMT: document.getElementById('timeGMT'),
+            timeAMS: document.getElementById('timeAMS'),
+            timeKTM: document.getElementById('timeKTM'),
+            timeLA: document.getElementById('timeLA'),
+            timeMEL: document.getElementById('timeMEL'),
+            
+            // World Buttons
+            btnGMT: document.getElementById('btnGMT'),
+            btnAMS: document.getElementById('btnAMS'),
+            btnKTM: document.getElementById('btnKTM'),
+            btnLA: document.getElementById('btnLA'),
+            btnMEL: document.getElementById('btnMEL'),
+
             wave: document.getElementById('waveType'),
             freq: document.getElementById('frequencyInput'),
             slider: document.getElementById('decaySlider'),
             decayDisplay: document.getElementById('decayValue'),
             testBtn: document.getElementById('testSoundBtn'),
             applyBtn: document.getElementById('applySoundBtn'),
+            muteBtn: document.getElementById('muteBtn'),
             controls: {
                 countdown: document.getElementById('countdownControls'),
                 alarm: document.getElementById('alarmControls'),
@@ -885,75 +1017,131 @@
             intWork: document.getElementById('intWork'),
             intRest: document.getElementById('intRest'),
             intRounds: document.getElementById('intRounds'),
-            // Stopwatch Elements
             lapsContainer: document.getElementById('lapsContainer'),
-            lapsListBody: document.getElementById('lapsListBody')
+            lapsListBody: document.getElementById('lapsListBody'),
+            presetZen: document.getElementById('presetZen'),
+            presetAlert: document.getElementById('presetAlert'),
+            presetRetro: document.getElementById('presetRetro')
         };
 
-        // --- GEO LOCATION & TIME ALGORITHM ---
-        function calculateOffsetFromLon(lon) {
-            return Math.round(lon / 15);
+        // --- NEW FEATURES ---
+
+        function saveSettings() {
+            localStorage.setItem('chrono_lat', userLat);
+            localStorage.setItem('chrono_lon', userLon);
+            localStorage.setItem('chrono_wave', els.wave.value);
+            localStorage.setItem('chrono_freq', els.freq.value);
+            localStorage.setItem('chrono_decay', els.slider.value);
+            localStorage.setItem('chrono_intWork', els.intWork.value);
+            localStorage.setItem('chrono_intRest', els.intRest.value);
+            localStorage.setItem('chrono_intRounds', els.intRounds.value);
+            localStorage.setItem('chrono_zone', selectedZone);
         }
 
+        function loadSettings() {
+            if(localStorage.getItem('chrono_lat')) {
+                userLat = parseFloat(localStorage.getItem('chrono_lat'));
+                userLon = parseFloat(localStorage.getItem('chrono_lon'));
+                updateGeoDisplay(userLat, userLon);
+            }
+            if(localStorage.getItem('chrono_wave')) els.wave.value = localStorage.getItem('chrono_wave');
+            if(localStorage.getItem('chrono_freq')) els.freq.value = localStorage.getItem('chrono_freq');
+            if(localStorage.getItem('chrono_decay')) {
+                els.slider.value = localStorage.getItem('chrono_decay');
+                els.decayDisplay.innerText = parseFloat(els.slider.value).toFixed(1) + "s";
+            }
+            if(localStorage.getItem('chrono_intWork')) els.intWork.value = localStorage.getItem('chrono_intWork');
+            if(localStorage.getItem('chrono_intRest')) els.intRest.value = localStorage.getItem('chrono_intRest');
+            if(localStorage.getItem('chrono_intRounds')) els.intRounds.value = localStorage.getItem('chrono_intRounds');
+            if(localStorage.getItem('chrono_zone')) {
+                const savedZone = localStorage.getItem('chrono_zone');
+                const btn = [els.btnGMT, els.btnAMS, els.btnKTM, els.btnLA, els.btnMEL].find(b => b.dataset.zone === savedZone);
+                if(btn) selectZone(btn);
+            }
+        }
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+            }
+        }
+        function releaseWakeLock() {
+            if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); }
+        }
+
+        function triggerHaptic(pattern = 15) {
+            if (navigator.vibrate) navigator.vibrate(pattern);
+        }
+
+        function applyPreset(wave, freq, decay) {
+            els.wave.value = wave;
+            els.freq.value = freq;
+            els.slider.value = decay;
+            els.decayDisplay.innerText = decay + "s";
+            triggerHaptic();
+            playTone(0.3, wave, freq);
+            saveSettings();
+            // If alarm is already ringing, update the loop immediately
+            if(isAlarmRinging) {
+                startAlarmSound(); // Restarts with new decay
+            }
+        }
+
+        els.presetZen.onclick = () => applyPreset('sine', 60, 4.0);
+        els.presetAlert.onclick = () => applyPreset('square', 880, 0.5);
+        els.presetRetro.onclick = () => applyPreset('sawtooth', 120, 1.0);
+
+        els.muteBtn.onclick = () => {
+            isMuted = !isMuted;
+            els.muteBtn.classList.toggle('muted');
+            els.muteBtn.innerText = isMuted ? "Sound Muted (Unmute: M)" : "Mute Sound (M)";
+            triggerHaptic();
+        }
+        
+        function toggleMute() { els.muteBtn.click(); }
+
+        // --- ZONE SELECTION LOGIC ---
+        function selectZone(clickedBtn) {
+            [els.btnGMT, els.btnAMS, els.btnKTM, els.btnLA, els.btnMEL].forEach(b => b.classList.remove('active'));
+            clickedBtn.classList.add('active');
+            selectedZone = clickedBtn.dataset.zone;
+            const city = clickedBtn.querySelector('.world-city').innerText;
+            selectedZoneLabel = city.includes('GMT') ? 'GMT TIME:' : city.toUpperCase() + ':';
+            els.zoneLabel.innerText = selectedZoneLabel;
+            triggerHaptic();
+            updateWorldClocks();
+            saveSettings();
+        }
+
+        [els.btnGMT, els.btnAMS, els.btnKTM, els.btnLA, els.btnMEL].forEach(btn => {
+            btn.addEventListener('click', () => selectZone(btn));
+        });
+
+        // --- GEO LOCATION ---
         function updateGeoDisplay(lat, lon) {
             userLat = parseFloat(lat).toFixed(4);
             userLon = parseFloat(lon).toFixed(4);
-            utcOffsetHours = calculateOffsetFromLon(lon);
-            const displaySign = utcOffsetHours >= 0 ? '+' : '';
-            els.geo.innerHTML = `LAT: ${userLat} // LON: ${userLon} // UTC${displaySign}${utcOffsetHours}`;
+            els.geo.innerHTML = `LAT: ${userLat} // LON: ${userLon}`;
         }
+        updateGeoDisplay(0.00, 0.00); 
 
-        // Default to 0,0
-        updateGeoDisplay(0.00, 0.00);
-
-        // --- EDITING COORDINATES ---
         els.geo.addEventListener('dblclick', () => {
-            const currentLat = userLat;
-            const currentLon = userLon;
-
             const inputLat = document.createElement('input');
-            inputLat.type = 'number';
-            inputLat.className = 'geo-edit-input';
-            inputLat.value = currentLat;
-            inputLat.step = "any";
-            // Fix style for small input in sidebar
-            inputLat.style.width = "60px";
-            inputLat.style.fontSize = "0.7rem";
-            inputLat.style.padding = "2px";
-
+            inputLat.type = 'number'; inputLat.className = 'geo-edit-input'; inputLat.value = userLat;
+            inputLat.step = "any"; inputLat.style.width = "60px"; inputLat.style.fontSize = "0.7rem"; inputLat.style.padding = "2px";
             const inputLon = document.createElement('input');
-            inputLon.type = 'number';
-            inputLon.className = 'geo-edit-input';
-            inputLon.value = currentLon;
-            inputLon.step = "any";
-            inputLon.style.width = "60px";
-            inputLon.style.fontSize = "0.7rem";
-            inputLon.style.padding = "2px";
-
+            inputLon.type = 'number'; inputLon.className = 'geo-edit-input'; inputLon.value = userLon;
+            inputLon.step = "any"; inputLon.style.width = "60px"; inputLon.style.fontSize = "0.7rem"; inputLon.style.padding = "2px";
             els.geo.innerText = '';
-            els.geo.appendChild(document.createTextNode('LAT: '));
-            els.geo.appendChild(inputLat);
-            els.geo.appendChild(document.createTextNode(' LON: '));
-            els.geo.appendChild(inputLon);
-
+            els.geo.appendChild(document.createTextNode('LAT: ')); els.geo.appendChild(inputLat);
+            els.geo.appendChild(document.createTextNode(' LON: ')); els.geo.appendChild(inputLon);
             inputLat.focus();
-
             function saveNewCoords() {
-                const newLat = parseFloat(inputLat.value) || 0;
-                const newLon = parseFloat(inputLon.value) || 0;
-                updateGeoDisplay(newLat, newLon);
+                updateGeoDisplay(parseFloat(inputLat.value)||0, parseFloat(inputLon.value)||0);
+                saveSettings();
             }
-
-            const closeHandler = (e) => {
-                if (e.target !== inputLat && e.target !== inputLon) {
-                    saveNewCoords();
-                    document.body.removeEventListener('click', closeHandler);
-                }
-            };
-            
             inputLat.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveNewCoords(); });
             inputLon.addEventListener('keydown', (e) => { if(e.key === 'Enter') saveNewCoords(); });
-            setTimeout(() => document.body.addEventListener('click', closeHandler), 100);
         });
 
         // --- AUDIO ENGINE ---
@@ -963,19 +1151,27 @@
 
         els.slider.addEventListener('input', (e) => {
             els.decayDisplay.innerText = parseFloat(e.target.value).toFixed(1) + "s";
+            // Dynamic update while ringing
+            if(isAlarmRinging) startAlarmSound(); 
         });
 
         function playTone(duration = 0.5, type = null, freq = null) {
+            if(isMuted) return;
+            
+            // Only add the individual blip visualizer if the alarm IS NOT breathing.
+            if(!isAlarmRinging) {
+                const panelClass = 'audio-active';
+                mainPanel.classList.add(panelClass);
+                setTimeout(() => mainPanel.classList.remove(panelClass), duration * 1000);
+            }
+
             const osc = audioContext.createOscillator();
             const gain = audioContext.createGain();
-            
             osc.type = type || els.wave.value; 
             osc.frequency.setValueAtTime(freq || parseInt(els.freq.value), audioContext.currentTime);
-            
             gain.gain.setValueAtTime(0, audioContext.currentTime);
             gain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.05);
             gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-            
             osc.connect(gain);
             gain.connect(audioContext.destination);
             osc.start();
@@ -983,59 +1179,67 @@
         }
 
         function startAlarmSound() {
-            if(beepLoop) return;
+            // If already ringing, clear old loop to allow dynamic update of speed
+            if(beepLoop) clearInterval(beepLoop);
+            
             isAlarmRinging = true;
             els.snoozeBtn.classList.remove('hidden');
+            
+            // Get current decay for Sync
             const decay = parseFloat(els.slider.value);
+            
+            // Sync Animation Speed to Decay
+            mainPanel.style.animationDuration = `${decay}s`;
+            mainPanel.classList.add('alarm-breathing');
+            
+            triggerHaptic([500, 200, 500, 200, 500]);
             playTone(decay); 
+            
+            // Sync Loop Speed to Decay
             beepLoop = setInterval(() => {
-                playTone(decay); 
-            }, 1000);
+                playTone(decay);
+                triggerHaptic([500, 200, 500]);
+            }, decay * 1000);
         }
 
         function stopAlarmSound() {
-            if(beepLoop) {
-                clearInterval(beepLoop);
-                beepLoop = null;
-            }
+            if(beepLoop) { clearInterval(beepLoop); beepLoop = null; }
             isAlarmRinging = false;
+            
+            // Disable breathing animation
+            mainPanel.classList.remove('alarm-breathing');
+            mainPanel.style.animationDuration = ''; // Reset
+            mainPanel.classList.remove('audio-active-alarm');
         }
 
         // --- CLOCK FUNCTIONS ---
         function updateWorldClocks() {
             const now = new Date();
-            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const localTimeMs = utcTime + (3600000 * utcOffsetHours);
-            const localDate = new Date(localTimeMs);
-
-            els.localTime.innerText = localDate.toLocaleTimeString('en-US', {
-                hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
-            });
-
             const fmt = (zone) => {
-                try {
-                    return new Intl.DateTimeFormat('en-US', {
-                        timeZone: zone, hour: 'numeric', minute: '2-digit', hour12: true
-                    }).format(now);
-                } catch (e) { return "--:--"; }
+                try { return new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit', hour12: true }).format(now); } catch (e) { return "--:--"; }
             };
+            els.timeGMT.innerText = fmt('UTC');
+            els.timeAMS.innerText = fmt('Europe/Amsterdam');
+            els.timeKTM.innerText = fmt('Asia/Kathmandu');
+            els.timeLA.innerText = fmt('America/Los_Angeles');
+            els.timeMEL.innerText = fmt('Australia/Melbourne');
 
-            els.ams.innerText = fmt('Europe/Amsterdam');
-            els.ktm.innerText = fmt('Asia/Kathmandu');
-            els.la.innerText = fmt('America/Los_Angeles');
-            els.mel.innerText = fmt('Australia/Melbourne');
+            try {
+                els.localTime.innerText = new Intl.DateTimeFormat('en-US', {
+                    timeZone: selectedZone, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+                }).format(now);
+            } catch (e) { els.localTime.innerText = "--:--:--"; }
             
-            // FIX: If Alarm mode is active, make sure the display ticks
             if(mode === 'alarm') {
                 renderDisplay();
-            }
-
-            if(mode === 'alarm' && alarmTargetTime && !isAlarmRinging) {
-                const h = localDate.getHours().toString().padStart(2,'0');
-                const m = localDate.getMinutes().toString().padStart(2,'0');
-                const currentHm = `${h}:${m}`;
-                if(currentHm === alarmTargetTime && localDate.getSeconds() === 0) {
-                    startAlarmSound();
+                if(alarmTargetTime && !isAlarmRinging) {
+                    const parts = new Intl.DateTimeFormat('en-GB', { 
+                        timeZone: selectedZone, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false 
+                    }).formatToParts(now);
+                    const h = parts.find(p=>p.type==='hour').value;
+                    const m = parts.find(p=>p.type==='minute').value;
+                    const s = parts.find(p=>p.type==='second').value;
+                    if(`${h}:${m}` === alarmTargetTime && s === '00') startAlarmSound();
                 }
             }
         }
@@ -1048,7 +1252,6 @@
             const h = Math.floor(totalSec / 3600);
             const m = Math.floor((totalSec % 3600) / 60);
             const s = totalSec % 60;
-            
             if(showMs) {
                 const m_sw = Math.floor(ms / 60000);
                 const s_sw = Math.floor((ms % 60000) / 1000);
@@ -1060,24 +1263,35 @@
         }
 
         // --- CORE LOGIC ---
+        function updateTitle(text) {
+            document.title = text ? `(${text}) Chrono Terminal` : "Chrono Terminal V5.4";
+        }
+
         function renderDisplay() {
+            let timeStr = "00:00";
             if (mode === 'stopwatch') {
-                els.display.innerText = formatTime(currentTimeMs, true);
+                timeStr = formatTime(currentTimeMs, true);
+                els.display.innerText = timeStr;
+                updateTitle(formatTime(currentTimeMs));
             } else if (mode === 'interval') {
-                els.display.innerText = formatTime(intervalState.timeLeft * 1000);
-                const phaseText = `R${intervalState.currentRound}/${intervalState.totalRounds} : ${intervalState.phase}`;
-                els.phase.innerText = phaseText;
+                timeStr = formatTime(intervalState.timeLeft * 1000);
+                els.display.innerText = timeStr;
+                els.phase.innerText = `R${intervalState.currentRound}/${intervalState.totalRounds} : ${intervalState.phase}`;
                 els.phase.style.color = intervalState.phase === 'WORK' ? '#00ff9d' : '#ffe600';
+                updateTitle(timeStr);
             } else if (mode === 'countdown') {
-                els.display.innerText = formatTime(currentTimeMs);
+                timeStr = formatTime(currentTimeMs);
+                els.display.innerText = timeStr;
+                updateTitle(timeStr);
             } else if (mode === 'alarm') {
-                 const now = new Date();
-                 const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-                 const localTimeMs = utcTime + (3600000 * utcOffsetHours);
-                 const localDate = new Date(localTimeMs);
-                 els.display.innerText = localDate.toLocaleTimeString('en-US', {
-                    hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
-                });
+                 try {
+                     const now = new Date();
+                     els.display.innerText = new Intl.DateTimeFormat('en-US', {
+                        timeZone: selectedZone, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+                    }).format(now);
+                 } catch(e) { els.display.innerText = "--:--:--"; }
+                if(isAlarmRinging) updateTitle("ALARM RINGING");
+                else updateTitle(alarmTargetTime ? "Alarm Set" : "Clock");
             }
         }
 
@@ -1085,268 +1299,181 @@
             clearInterval(timerInterval);
             isRunning = false;
             stopAlarmSound();
+            releaseWakeLock();
             els.phase.innerText = "";
+            renderDisplay();
+        }
+
+        // --- KEYBOARD SHORTCUTS ---
+        window.addEventListener('keydown', (e) => {
+            if(e.target.tagName === 'INPUT') return;
+            switch(e.code) {
+                case 'Space': e.preventDefault(); triggerHaptic(); toggleStartStop(); break;
+                case 'KeyR': triggerHaptic(); resetCurrentMode(); break;
+                case 'KeyL': if(mode === 'stopwatch') { triggerHaptic(); document.getElementById('lapSwBtn').click(); } break;
+                case 'KeyF': toggleFullscreen(); break;
+                case 'KeyM': toggleMute(); break;
+            }
+        });
+
+        function toggleStartStop() {
+            if(mode === 'countdown') isRunning ? document.getElementById('stopCountdownBtn').click() : document.getElementById('startCountdownBtn').click();
+            else if (mode === 'interval') isRunning ? document.getElementById('stopIntervalBtn').click() : document.getElementById('startIntervalBtn').click();
+            else if (mode === 'stopwatch') isRunning ? document.getElementById('stopSwBtn').click() : document.getElementById('startSwBtn').click();
+        }
+
+        function resetCurrentMode() {
+             if(mode === 'countdown') document.getElementById('resetCountdownBtn').click();
+             else if (mode === 'interval') document.getElementById('resetIntervalBtn').click();
+             else if (mode === 'stopwatch') document.getElementById('resetSwBtn').click();
         }
 
         // --- CONTROLS ---
-
-        els.testBtn.onclick = () => {
-            const f = parseInt(els.freq.value);
-            const w = els.wave.value;
-            const d = parseFloat(els.slider.value);
-            playTone(d, w, f);
-        };
+        els.testBtn.onclick = () => { triggerHaptic(); playTone(parseFloat(els.slider.value), els.wave.value, parseInt(els.freq.value)); };
 
         els.applyBtn.onclick = () => {
-            audioConfig.freq = parseInt(els.freq.value);
-            audioConfig.type = els.wave.value;
+            triggerHaptic();
+            saveSettings();
             els.applyBtn.innerText = "Saved";
             setTimeout(() => els.applyBtn.innerText = "Save", 1000);
         };
 
-        // COUNTDOWN
+        // --- COUNTDOWN LOGIC ---
         document.getElementById('startCountdownBtn').onclick = () => {
+            triggerHaptic();
             if(isRunning) return;
             const m = parseInt(els.cdMin.value) || 0;
             const s = parseInt(els.cdSec.value) || 0;
-            
             if (currentTimeMs === 0) {
                 currentTimeMs = (m * 60 + s) * 1000;
                 initialCountdownTotal = currentTimeMs;
                 els.progBar.style.width = '100%';
-                els.progBar.classList.remove('low');
-                els.progBar.classList.remove('work-mode', 'rest-mode');
+                els.progBar.classList.remove('low', 'work-mode', 'rest-mode');
             }
-            
             if(currentTimeMs > 0) {
                 isRunning = true;
+                requestWakeLock();
                 els.progContainer.classList.remove('hidden');
-
                 timerInterval = setInterval(() => {
                     currentTimeMs -= 100;
-                    
                     if(initialCountdownTotal > 0) {
                         const pct = (currentTimeMs / initialCountdownTotal) * 100;
                         els.progBar.style.width = `${pct}%`;
                         if(pct < 10) els.progBar.classList.add('low');
                     }
-
                     if(currentTimeMs <= 0) {
-                        currentTimeMs = 0;
-                        els.progBar.style.width = '0%';
-                        stopAll();
-                        playTone(parseFloat(els.slider.value), els.wave.value, parseInt(els.freq.value)); 
+                        currentTimeMs = 0; els.progBar.style.width = '0%';
+                        clearInterval(timerInterval);
+                        startAlarmSound(); // Loops alarm and visual breathing
                     }
                     renderDisplay();
                 }, 100);
             }
         };
-        
-        document.getElementById('stopCountdownBtn').onclick = stopAll;
-        
+
+        document.getElementById('stopCountdownBtn').onclick = () => { triggerHaptic(); stopAll(); };
         document.getElementById('resetCountdownBtn').onclick = () => {
-            stopAll();
-            currentTimeMs = 0;
-            initialCountdownTotal = 0;
-            els.progBar.style.width = '100%';
-            els.progBar.classList.remove('low', 'work-mode', 'rest-mode');
-            els.progContainer.classList.add('hidden');
-            renderDisplay();
+            triggerHaptic(); stopAll(); currentTimeMs = 0; initialCountdownTotal = 0;
+            els.progBar.style.width = '100%'; els.progBar.classList.remove('low', 'work-mode', 'rest-mode');
+            els.progContainer.classList.add('hidden'); renderDisplay(); updateTitle("");
         };
 
-        // ALARM
         document.getElementById('setAlarmBtn').onclick = () => {
+            triggerHaptic();
             if(els.alarmInput.value) {
                 alarmTargetTime = els.alarmInput.value;
-                document.getElementById('setAlarmBtn').parentElement.classList.add('hidden'); // Hide wrapper
-                els.alarmActiveUI.classList.remove('hidden');
-                els.snoozeBtn.classList.add('hidden');
+                document.getElementById('setAlarmBtn').parentElement.classList.add('hidden'); 
+                els.alarmActiveUI.classList.remove('hidden'); els.snoozeBtn.classList.add('hidden');
+                requestWakeLock();
             }
         };
         document.getElementById('disableAlarmBtn').onclick = () => {
-            stopAlarmSound();
-            alarmTargetTime = null;
-            els.alarmActiveUI.classList.add('hidden');
-            document.getElementById('setAlarmBtn').parentElement.classList.remove('hidden'); // Show wrapper
+            triggerHaptic(); stopAlarmSound(); alarmTargetTime = null;
+            els.alarmActiveUI.classList.add('hidden'); document.getElementById('setAlarmBtn').parentElement.classList.remove('hidden');
+            releaseWakeLock(); updateTitle("");
         };
         document.getElementById('snoozeBtn').onclick = () => {
-            stopAlarmSound();
-            els.snoozeBtn.classList.add('hidden');
-            const now = new Date();
-            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const localTimeMs = utcTime + (3600000 * utcOffsetHours);
-            const localDate = new Date(localTimeMs);
-
-            localDate.setMinutes(localDate.getMinutes() + 5);
-            const newH = localDate.getHours().toString().padStart(2,'0');
-            const newM = localDate.getMinutes().toString().padStart(2,'0');
-            alarmTargetTime = `${newH}:${newM}`; 
-            els.alarmActiveUI.firstElementChild.innerText = `SNOOZED`;
-            setTimeout(() => els.alarmActiveUI.firstElementChild.innerText = "ALARM ARMED", 3000);
+            triggerHaptic(); stopAlarmSound(); els.snoozeBtn.classList.add('hidden');
+            if(alarmTargetTime) {
+                const [h,m] = alarmTargetTime.split(':').map(Number);
+                let newM = m + 5;
+                let newH = h;
+                if(newM >= 60) { newM -= 60; newH = (newH + 1) % 24; }
+                alarmTargetTime = `${newH.toString().padStart(2,'0')}:${newM.toString().padStart(2,'0')}`;
+                els.alarmActiveUI.firstElementChild.innerText = `SNOOZED`;
+                setTimeout(() => els.alarmActiveUI.firstElementChild.innerText = "ALARM ARMED", 3000);
+            }
         };
 
-        // INTERVAL
         document.getElementById('startIntervalBtn').onclick = () => {
-            if(isRunning) return;
-            // Config Sound Parameters
-            const soundType = els.wave.value;
-            const soundFreq = parseInt(els.freq.value);
-            const soundDecay = parseFloat(els.slider.value);
-
+            triggerHaptic(); if(isRunning) return; saveSettings(); 
             if(intervalState.timeLeft === 0 && intervalState.currentRound === 1 && intervalState.phase === 'WORK') {
                 intervalState.workTime = parseInt(els.intWork.value) || 30;
                 intervalState.restTime = parseInt(els.intRest.value) || 10;
                 intervalState.totalRounds = parseInt(els.intRounds.value) || 5;
-                intervalState.currentRound = 1;
-                intervalState.phase = 'WORK';
-                intervalState.timeLeft = intervalState.workTime;
-                
-                intervalState.totalDuration = intervalState.workTime;
+                intervalState.currentRound = 1; intervalState.phase = 'WORK';
+                intervalState.timeLeft = intervalState.workTime; intervalState.totalDuration = intervalState.workTime;
             }
-
-            isRunning = true;
-            els.progContainer.classList.remove('hidden');
-            
-            if (intervalState.phase === 'WORK') {
-                els.progBar.classList.add('work-mode');
-                els.progBar.classList.remove('rest-mode');
-            } else {
-                els.progBar.classList.add('rest-mode');
-                els.progBar.classList.remove('work-mode');
-            }
-
-            playTone(soundDecay, soundType, soundFreq);
-            renderDisplay();
+            isRunning = true; requestWakeLock(); els.progContainer.classList.remove('hidden');
+            if (intervalState.phase === 'WORK') els.progBar.classList.add('work-mode'); else els.progBar.classList.add('rest-mode');
+            playTone(parseFloat(els.slider.value)); renderDisplay();
             
             timerInterval = setInterval(() => {
                 intervalState.timeLeft--;
-                
-                if (intervalState.totalDuration > 0) {
-                    const pct = (intervalState.timeLeft / intervalState.totalDuration) * 100;
-                    els.progBar.style.width = `${pct}%`;
-                }
-
+                if (intervalState.totalDuration > 0) els.progBar.style.width = `${(intervalState.timeLeft / intervalState.totalDuration) * 100}%`;
                 if (intervalState.timeLeft < 0) {
-                    const currentSoundType = els.wave.value;
-                    const currentSoundFreq = parseInt(els.freq.value);
-                    const currentSoundDecay = parseFloat(els.slider.value);
-
+                    const decay = parseFloat(els.slider.value); triggerHaptic([300, 100, 300]); 
                     if (intervalState.phase === 'WORK') {
                         if (intervalState.currentRound >= intervalState.totalRounds) {
-                            stopAll();
-                            intervalState.phase = 'DONE';
-                            els.display.innerText = "DONE";
-                            playTone(currentSoundDecay, currentSoundType, currentSoundFreq); 
-                            els.progBar.style.width = '0%';
-                            return;
+                            stopAll(); intervalState.phase = 'DONE'; els.display.innerText = "DONE"; playTone(decay); els.progBar.style.width = '0%'; return;
                         }
-                        playTone(currentSoundDecay, currentSoundType, currentSoundFreq);
-                        intervalState.phase = 'REST';
-                        intervalState.timeLeft = intervalState.restTime;
-                        intervalState.totalDuration = intervalState.restTime;
-                        els.progBar.classList.remove('work-mode');
-                        els.progBar.classList.add('rest-mode');
+                        playTone(decay); intervalState.phase = 'REST'; intervalState.timeLeft = intervalState.restTime; intervalState.totalDuration = intervalState.restTime;
+                        els.progBar.classList.remove('work-mode'); els.progBar.classList.add('rest-mode');
                     } else {
-                        playTone(currentSoundDecay, currentSoundType, currentSoundFreq);
-                        intervalState.phase = 'WORK';
-                        intervalState.currentRound++;
-                        intervalState.timeLeft = intervalState.workTime;
-                        intervalState.totalDuration = intervalState.workTime;
-                        els.progBar.classList.remove('rest-mode');
-                        els.progBar.classList.add('work-mode');
+                        playTone(decay); intervalState.phase = 'WORK'; intervalState.currentRound++; intervalState.timeLeft = intervalState.workTime; intervalState.totalDuration = intervalState.workTime;
+                        els.progBar.classList.remove('rest-mode'); els.progBar.classList.add('work-mode');
                     }
                     els.progBar.style.width = '100%';
                 }
                 renderDisplay();
             }, 1000);
         };
-
-        document.getElementById('stopIntervalBtn').onclick = stopAll;
+        document.getElementById('stopIntervalBtn').onclick = () => { triggerHaptic(); stopAll(); };
         document.getElementById('resetIntervalBtn').onclick = () => {
-            stopAll();
-            intervalState.currentRound = 1;
-            intervalState.phase = 'WORK';
-            intervalState.timeLeft = 0;
-            els.progContainer.classList.add('hidden');
-            els.progBar.classList.remove('work-mode', 'rest-mode');
-            renderDisplay();
+            triggerHaptic(); stopAll(); intervalState.currentRound = 1; intervalState.phase = 'WORK'; intervalState.timeLeft = 0;
+            els.progContainer.classList.add('hidden'); els.progBar.classList.remove('work-mode', 'rest-mode'); renderDisplay(); updateTitle("");
         };
 
-        // STOPWATCH
         document.getElementById('startSwBtn').onclick = () => {
-            if(isRunning) return;
-            isRunning = true;
-            timerInterval = setInterval(() => {
-                currentTimeMs += 10;
-                renderDisplay();
-            }, 10);
+            triggerHaptic(); if(isRunning) return; isRunning = true; requestWakeLock();
+            timerInterval = setInterval(() => { currentTimeMs += 10; renderDisplay(); }, 10);
         };
-        
         document.getElementById('lapSwBtn').onclick = () => {
-            if(!isRunning && currentTimeMs === 0) return;
-            
-            const currentSplitMs = currentTimeMs - lastLapTimeMs;
-            const lapNumber = laps.length + 1;
-            
-            laps.push({ total: currentTimeMs, split: currentSplitMs });
-            lastLapTimeMs = currentTimeMs;
-            
-            // Show Container
+            triggerHaptic(); if(!isRunning && currentTimeMs === 0) return;
+            const currentSplitMs = currentTimeMs - lastLapTimeMs; const lapNumber = laps.length + 1;
+            laps.push({ total: currentTimeMs, split: currentSplitMs }); lastLapTimeMs = currentTimeMs;
             els.lapsContainer.classList.remove('hidden');
-            
-            // Render Row
-            const row = document.createElement('div');
-            row.className = 'lap-row';
-            row.innerHTML = `
-                <span>${lapNumber}</span>
-                <span class="lap-split">+ ${formatTime(currentSplitMs, true)}</span>
-                <span class="lap-total">${formatTime(currentTimeMs, true)}</span>
-            `;
-            
-            // Prepend so newest is top
+            const row = document.createElement('div'); row.className = 'lap-row';
+            row.innerHTML = `<span>${lapNumber}</span><span class="lap-split">+ ${formatTime(currentSplitMs, true)}</span><span class="lap-total">${formatTime(currentTimeMs, true)}</span>`;
             els.lapsListBody.insertBefore(row, els.lapsListBody.firstChild);
         };
-
-        document.getElementById('stopSwBtn').onclick = stopAll;
-        
+        document.getElementById('stopSwBtn').onclick = () => { triggerHaptic(); stopAll(); };
         document.getElementById('resetSwBtn').onclick = () => {
-            stopAll();
-            currentTimeMs = 0;
-            lastLapTimeMs = 0;
-            laps = [];
-            els.lapsListBody.innerHTML = '';
-            els.lapsContainer.classList.add('hidden');
-            renderDisplay();
+            triggerHaptic(); stopAll(); currentTimeMs = 0; lastLapTimeMs = 0; laps = [];
+            els.lapsListBody.innerHTML = ''; els.lapsContainer.classList.add('hidden'); renderDisplay(); updateTitle("");
         };
 
-        // MODE SWITCHING
         els.modeSelect.addEventListener('change', (e) => {
-            stopAll();
-            mode = e.target.value;
-            els.progContainer.classList.add('hidden');
-            els.progBar.classList.remove('work-mode', 'rest-mode');
-            Object.values(els.controls).forEach(el => el.classList.add('hidden'));
-            els.controls[mode].classList.remove('hidden');
-            // Specific logic for Stopwatch visuals
-            if (mode === 'stopwatch' && laps.length > 0) {
-                 els.lapsContainer.classList.remove('hidden');
-            } else {
-                 els.lapsContainer.classList.add('hidden');
-            }
-            
-            currentTimeMs = 0;
-            els.phase.innerText = "";
-            if(mode === 'interval') {
-                intervalState.timeLeft = 0;
-                intervalState.currentRound = 1;
-                intervalState.phase = 'WORK';
-                renderDisplay(); 
-            } else {
-                renderDisplay();
-            }
+            triggerHaptic(); stopAll(); mode = e.target.value;
+            els.progContainer.classList.add('hidden'); els.progBar.classList.remove('work-mode', 'rest-mode');
+            Object.values(els.controls).forEach(el => el.classList.add('hidden')); els.controls[mode].classList.remove('hidden');
+            if (mode === 'stopwatch' && laps.length > 0) els.lapsContainer.classList.remove('hidden'); else els.lapsContainer.classList.add('hidden');
+            currentTimeMs = 0; els.phase.innerText = "";
+            if(mode === 'interval') { intervalState.timeLeft = 0; intervalState.currentRound = 1; intervalState.phase = 'WORK'; }
+            renderDisplay(); updateTitle("");
         });
 
-        // Init
+        loadSettings(); 
         els.modeSelect.value = 'countdown';
         els.controls.countdown.classList.remove('hidden');
         renderDisplay();
