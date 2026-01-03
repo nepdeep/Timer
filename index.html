@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chrono Terminal V5.4 - Synced</title>
+    <title>Chrono Terminal V5.5 - OLED Ready</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -187,10 +187,6 @@
             border-color: var(--neon-blue);
         }
 
-        /* ALARM SYNCED ANIMATION 
-           Uses an "Attack-Decay" curve to match the sound envelope 
-           Start Bright -> Fade to Dim
-        */
         @keyframes alarm-flash {
             0% { 
                 box-shadow: 0 0 80px var(--neon-red), inset 0 0 50px rgba(255, 0, 85, 0.5); 
@@ -205,14 +201,15 @@
         }
 
         .glass-panel.alarm-breathing {
-            /* Duration is set via JS to match Audio Decay */
             animation-name: alarm-flash;
             animation-iteration-count: infinite;
             animation-timing-function: ease-out; 
             border-color: var(--neon-red);
         }
 
-        /* --- FULLSCREEN --- */
+        /* =========================================
+           FULLSCREEN MODE CORE
+           ========================================= */
         .glass-panel.fullscreen-mode {
             position: fixed;
             top: 0;
@@ -228,23 +225,51 @@
             background: var(--bg-dark);
             padding: 20px;
         }
-        
-        .glass-panel.fullscreen-mode .panel-header {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            width: 90%;
-            z-index: 1001;
+
+        /* Hide Header & Controls by default in Fullscreen */
+        .glass-panel.fullscreen-mode .panel-header,
+        .glass-panel.fullscreen-mode .controls,
+        .glass-panel.fullscreen-mode .phase-indicator,
+        .glass-panel.fullscreen-mode .laps-container {
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.3s ease;
+            position: absolute; /* Take out of flow to let clock center */
+        }
+        
+        /* Positioning Controls Overlay in Fullscreen */
+        .glass-panel.fullscreen-mode .panel-header {
+            top: 40px;
+            width: 90%;
+            max-width: 600px;
+        }
+        .glass-panel.fullscreen-mode .controls {
+            bottom: 60px; /* Space for progress bar */
+            width: 90%;
+            max-width: 600px;
+        }
+        .glass-panel.fullscreen-mode .phase-indicator {
+            top: 100px;
+            width: 100%;
         }
 
-        .glass-panel.fullscreen-mode .panel-header.visible {
-            transform: translateX(-50%) translateY(0);
+        /* --- VISIBLE STATE (GESTURE TOGGLE) --- */
+        .glass-panel.fullscreen-mode.ui-visible .panel-header,
+        .glass-panel.fullscreen-mode.ui-visible .controls,
+        .glass-panel.fullscreen-mode.ui-visible .phase-indicator,
+        .glass-panel.fullscreen-mode.ui-visible .laps-container {
             opacity: 1;
             pointer-events: auto;
+            position: absolute; /* Keep absolute to stay overlaid */
+        }
+        
+        /* Ensure Inputs/Buttons work in overlay */
+        .glass-panel.fullscreen-mode.ui-visible .controls {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
         }
 
         .panel-header {
@@ -252,42 +277,10 @@
             width: 100%;
             gap: 10px;
             margin-bottom: 10px;
+            /* Ensure header is relative in normal mode */
+            position: relative; 
+            z-index: 1001;
         }
-
-        .fs-top-trigger {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 40px;
-            z-index: 1000;
-            display: none;
-            cursor: pointer;
-        }
-
-        .fs-handle {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 15px;
-            background: var(--glass-border);
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-muted);
-            font-size: 10px;
-            letter-spacing: 2px;
-            line-height: 0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: background 0.2s;
-        }
-        .fs-handle:hover { background: var(--neon-blue); color: #fff; }
-
-        .glass-panel.fullscreen-mode .fs-top-trigger { display: block; }
 
         .fullscreen-btn {
             background: var(--input-bg);
@@ -382,7 +375,6 @@
             text-align: left;
             position: relative;
             overflow: hidden;
-            /* Override standard button styles */
             height: auto;
             min-width: auto;
             color: var(--text-primary);
@@ -446,6 +438,8 @@
             letter-spacing: -3px;
             text-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
             line-height: 1.1;
+            /* Ensure it stays visible in FS */
+            z-index: 900;
         }
         
         .glass-panel.fullscreen-mode .digital-display { font-size: 15vw; margin-top: 0; }
@@ -472,7 +466,23 @@
             margin: 0 auto 20px auto;
             overflow: hidden;
             border: 1px solid var(--glass-border);
+            transition: all 0.3s;
         }
+
+        /* EDGE-TO-EDGE PROGRESS (Fullscreen) */
+        .glass-panel.fullscreen-mode .progress-track {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            margin: 0;
+            border-radius: 0;
+            border: none;
+            height: 8px; /* Slightly thicker */
+            z-index: 999; /* Visible always */
+            background: rgba(255,255,255,0.1);
+        }
+
         .progress-fill {
             height: 100%;
             background: var(--neon-blue);
@@ -621,12 +631,6 @@
         }
         .btn-snooze:hover { background: var(--neon-yellow); color: #000; box-shadow: 0 0 30px rgba(255, 230, 0, 0.6); }
 
-        @keyframes pulse-yellow {
-            0% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 230, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0); }
-        }
-
         /* --- AUDIO SETTINGS --- */
         .audio-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .audio-row-top { display: flex; align-items: center; gap: 10px; width: 100%; }
@@ -665,23 +669,69 @@
         .hidden { display: none !important; }
 
         /* =========================================
-           MOBILE OPTIMIZATIONS
+           MOBILE OPTIMIZATIONS + OLED BLACK MODE
            ========================================= */
         @media (max-width: 768px) {
             .sidebar { width: 85vw; }
-            .glass-panel { padding: 20px 15px; }
-            input, select { padding: 12px 15px; font-size: 1.2rem; margin-bottom: 10px; height: auto; }
-            .digital-display { font-size: 3.5rem; margin-top: 0; }
-            #modeSelect { font-size: 1rem; padding: 10px; }
-            #intervalControls .input-group-row { flex-direction: column; gap: 5px; }
-            .controls-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-            button { padding: 12px 10px; font-size: 0.9rem; width: 100%; min-width: 0; }
+            
+            /* 1. Expand the panel to fill more vertical space */
+            .glass-panel { 
+                padding: 15px; 
+                min-height: 65vh; 
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            /* 2. MAXIMIZE THE CLOCK DISPLAY */
+            .digital-display { 
+                font-size: 14vw; 
+                margin: 0;
+                flex-grow: 1; 
+                display: flex;
+                align-items: center; 
+                justify-content: center;
+                line-height: 1;
+            }
+
+            /* 3. SHRINK INPUTS & CONTROLS */
+            input, select { 
+                padding: 8px 10px;
+                font-size: 1rem;
+                margin-bottom: 8px;
+                height: 40px;
+                border-radius: 8px;
+            }
+            #modeSelect { font-size: 0.9rem; padding: 5px 10px; height: auto; }
+            #intervalControls .input-group-row { display: flex; flex-direction: row; gap: 5px; }
+            .input-wrapper .input-label { font-size: 0.6rem; margin-bottom: 2px; }
+            .controls-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+            button { padding: 10px; font-size: 0.85rem; width: 100%; min-width: 0; height: 45px; }
             #setAlarmBtn, #disableAlarmBtn, #snoozeBtn { grid-column: span 2; }
-            .laps-container { max-height: 120px; }
+            .laps-container { max-height: 100px; }
+            h3 { margin-bottom: 10px; }
+
+            /* --- OLED BLACK MODE (MOBILE FULLSCREEN) --- */
+            .glass-panel.fullscreen-mode {
+                background: #000000 !important; /* PURE BLACK */
+                background-image: none !important;
+                backdrop-filter: none !important; /* Save battery */
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            /* High Contrast Text */
+            .glass-panel.fullscreen-mode .digital-display {
+                color: #ffffff;
+                background: none;
+                -webkit-text-fill-color: #ffffff;
+                text-shadow: none;
+            }
         }
+
         @media (max-width: 380px) {
-            .digital-display { font-size: 2.8rem; }
-            button { font-size: 0.8rem; padding: 10px; }
+            .digital-display { font-size: 13vw; }
+            button { font-size: 0.75rem; padding: 8px; }
         }
 
     </style>
@@ -779,10 +829,6 @@
     <div class="main-stage">
         <div id="mainPanel" class="glass-panel alive">
             
-            <div id="fsTopTrigger" class="fs-top-trigger">
-                <div class="fs-handle">---</div>
-            </div>
-
             <div id="panelHeader" class="panel-header">
                 <select id="modeSelect">
                     <option value="countdown">1. Timer (Countdown)</option>
@@ -882,7 +928,6 @@
         const mainPanel = document.getElementById('mainPanel');
         const fullscreenBtn = document.getElementById('fullscreenToggle');
         const panelHeader = document.getElementById('panelHeader');
-        const fsTopTrigger = document.getElementById('fsTopTrigger');
         const themeSwitch = document.getElementById('themeSwitch');
 
         // --- VARIABLES ---
@@ -929,20 +974,19 @@
             if (document.fullscreenElement) mainPanel.classList.add('fullscreen-mode');
             else {
                 mainPanel.classList.remove('fullscreen-mode');
-                panelHeader.classList.remove('visible'); 
+                mainPanel.classList.remove('ui-visible'); // Reset visibility on exit
             }
         });
 
-        fsTopTrigger.addEventListener('click', (e) => {
-            panelHeader.classList.add('visible');
-            e.stopPropagation();
-        });
-
+        // --- GESTURE CONTROLS (FULLSCREEN) ---
         mainPanel.addEventListener('click', (e) => {
-            if (mainPanel.classList.contains('fullscreen-mode')) {
-                if (e.target.closest('.panel-header') || e.target.closest('.fs-top-trigger')) return;
-                panelHeader.classList.remove('visible');
-            }
+            if (!mainPanel.classList.contains('fullscreen-mode')) return;
+
+            // Don't toggle if user is interacting with controls/inputs
+            if (e.target.closest('.panel-header') || e.target.closest('.controls') || e.target.closest('.laps-container')) return;
+
+            // Toggle UI Visibility
+            mainPanel.classList.toggle('ui-visible');
         });
 
 
