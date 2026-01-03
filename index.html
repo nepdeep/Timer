@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chrono Terminal V5.7 - Always On</title>
+    <title>Time Machine </title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -791,7 +791,7 @@
                 </select>
                 
                 <div class="freq-wrapper">
-                    <input type="number" id="frequencyInput" min="10" max="1000" value="90">
+                    <input type="number" id="frequencyInput" min="10" max="1000" value="200">
                     <span class="unit-label">Hz</span>
                 </div>
             </div>
@@ -1070,7 +1070,7 @@
         let lastLapTimeMs = 0;
 
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let audioConfig = { type: 'sine', freq: 90 };
+        let audioConfig = { type: 'sine', freq: 200 };
         let beepLoop = null;
 
         // --- DOM ELEMENTS ---
@@ -1387,7 +1387,7 @@
 
         // --- CORE LOGIC ---
         function updateTitle(text) {
-            document.title = text ? `(${text}) Chrono Terminal` : "Chrono Terminal V5.7";
+            document.title = text ? `(${text}) Timer App` : "Timer App";
         }
 
         function renderDisplay() {
