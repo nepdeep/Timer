@@ -243,15 +243,18 @@
             top: 40px;
             width: 90%;
             max-width: 600px;
+            z-index: 1002; /* FIX: Added Z-Index */
         }
         .glass-panel.fullscreen-mode .controls {
             bottom: 60px; /* Space for progress bar */
             width: 90%;
             max-width: 600px;
+            /* FIX: Z-Index moved to ui-visible block below */
         }
         .glass-panel.fullscreen-mode .phase-indicator {
             top: 100px;
             width: 100%;
+            z-index: 1002;
         }
 
         /* --- VISIBLE STATE (GESTURE TOGGLE) --- */
@@ -262,6 +265,7 @@
             opacity: 1;
             pointer-events: auto;
             position: absolute; /* Keep absolute to stay overlaid */
+            z-index: 1002; /* FIX: FORCE BUTTONS ON TOP OF CLOCK/PROGRESS */
         }
         
         /* Ensure Inputs/Buttons work in overlay */
