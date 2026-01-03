@@ -1,9 +1,11 @@
+Here is the updated code. I have refactored the Audio Synth section in the sidebar.
+I replaced the previous stacked rows with a cleaner Grid Layout. Now, the inputs (Wave type and Frequency) are on the left, and the buttons (Test and Save) are stacked in a column on the right. This saves vertical space and keeps the controls aligned perfectly.
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Time Machine </title>
+    <title>Time Machine</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -634,13 +636,53 @@
 
         /* --- AUDIO SETTINGS --- */
         .audio-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-        .audio-row-top { display: flex; align-items: center; gap: 10px; width: 100%; }
-        .audio-row-top select { flex: 2; margin-bottom: 0; }
-        .audio-input-small { padding: 10px !important; font-size: 0.9rem !important; height: 40px; border: 1px solid var(--glass-border); }
-        .freq-wrapper { display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding-right: 15px; flex: 1; transition: 0.3s; height: 40px; }
+        
+        /* New Grid Layout for Audio Controls */
+        .audio-controls-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr; 
+            gap: 10px;
+            width: 100%;
+        }
+
+        .audio-input-col { display: flex; flex-direction: column; gap: 10px; }
+        .audio-btn-col { display: flex; flex-direction: column; gap: 10px; }
+
+        .audio-input-small { 
+            padding: 10px !important; 
+            font-size: 0.9rem !important; 
+            height: 40px; 
+            border: 1px solid var(--glass-border); 
+            width: 100%;
+            margin: 0 !important;
+        }
+        
+        .freq-wrapper { 
+            display: flex; 
+            align-items: center; 
+            background: var(--input-bg); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 12px; 
+            padding-right: 15px; 
+            flex: 1; 
+            transition: 0.3s; 
+            height: 40px; 
+            width: 100%;
+        }
         .freq-wrapper input { border: none; background: transparent; box-shadow: none; margin: 0; height: 100%; padding: 0 12px; font-size: 0.9rem; flex: 1; }
         .unit-label { color: var(--text-muted); font-family: var(--font-display); font-size: 0.85rem; user-select: none; }
-        .btn-small { padding: 0 15px; height: 40px; min-width: 60px; margin: 0; flex: 0 0 auto; font-size: 0.8rem; }
+        
+        .btn-small { 
+            padding: 0 10px; 
+            height: 40px; 
+            margin: 0; 
+            font-size: 0.8rem; 
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
         .audio-row-bottom { display: flex; align-items: center; gap: 10px; background: var(--input-bg); padding: 10px; border-radius: 10px; }
         .decay-label { font-family: var(--font-display); font-size: 0.7rem; color: var(--text-muted); width: 90px; }
         .decay-value { color: var(--neon-blue); font-weight: bold; }
@@ -783,21 +825,24 @@
                 <button class="btn-preset" id="presetRetro">RETRO</button>
             </div>
 
-            <div class="audio-row-top">
-                <select id="waveType" class="audio-input-small" aria-label="Waveform type">
-                    <option value="sine">Sine</option>
-                    <option value="square">Square</option>
-                    <option value="sawtooth">Sawtooth</option>
-                </select>
-                
-                <div class="freq-wrapper">
-                    <input type="number" id="frequencyInput" min="10" max="1000" value="200">
-                    <span class="unit-label">Hz</span>
+            <div class="audio-controls-grid">
+                <div class="audio-input-col">
+                    <select id="waveType" class="audio-input-small" aria-label="Waveform type">
+                        <option value="sine">Sine</option>
+                        <option value="square">Square</option>
+                        <option value="sawtooth">Sawtooth</option>
+                    </select>
+                    
+                    <div class="freq-wrapper">
+                        <input type="number" id="frequencyInput" min="10" max="1000" value="200">
+                        <span class="unit-label">Hz</span>
+                    </div>
                 </div>
-            </div>
-            <div class="audio-row-top" style="margin-top:5px;">
-                <button id="testSoundBtn" class="btn-small">Test</button>
-                <button id="applySoundBtn" class="btn-small">Save</button>
+
+                <div class="audio-btn-col">
+                    <button id="testSoundBtn" class="btn-small">Test</button>
+                    <button id="applySoundBtn" class="btn-small">Save</button>
+                </div>
             </div>
             
             <div class="audio-row-bottom" style="margin-top:10px;">
@@ -1629,3 +1674,4 @@
 </script>
 </body>
 </html>
+
