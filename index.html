@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chrono Terminal V5.6 - Clock Mode</title>
+    <title>Chrono Terminal V5.7 - Always On</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -243,18 +243,15 @@
             top: 40px;
             width: 90%;
             max-width: 600px;
-            z-index: 1002; /* FIX: Added Z-Index */
         }
         .glass-panel.fullscreen-mode .controls {
             bottom: 60px; /* Space for progress bar */
             width: 90%;
             max-width: 600px;
-            /* FIX: Z-Index moved to ui-visible block below */
         }
         .glass-panel.fullscreen-mode .phase-indicator {
             top: 100px;
             width: 100%;
-            z-index: 1002;
         }
 
         /* --- VISIBLE STATE (GESTURE TOGGLE) --- */
@@ -265,7 +262,6 @@
             opacity: 1;
             pointer-events: auto;
             position: absolute; /* Keep absolute to stay overlaid */
-            z-index: 1002; /* FIX: FORCE BUTTONS ON TOP OF CLOCK/PROGRESS */
         }
         
         /* Ensure Inputs/Buttons work in overlay */
@@ -673,6 +669,18 @@
 
         .hidden { display: none !important; }
 
+        /* VIDEO WAKE LOCK HACK (INVISIBLE) */
+        #wakeLockVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 1px;
+            opacity: 0.01; /* Must not be display:none */
+            pointer-events: none;
+            z-index: -9999;
+        }
+
         /* =========================================
            MOBILE OPTIMIZATIONS + OLED BLACK MODE
            ========================================= */
@@ -742,6 +750,10 @@
     </style>
 </head>
 <body>
+
+<video id="wakeLockVideo" playsinline loop muted autoplay>
+    <source src="data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAQBAAAACAAAABGdtb2QAAAAgbW9vdgAAAGxtdmhkAAAAAACj/0AAo/9AAAEAAAEAAAEAAgAAAQAABnB0cmFrAAAAXHRraGQAAAAHAAAAA6P/QACj/0AAAAEAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAEAAAAACAAAAAAABAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAEAAAEAAAAAAAAAAAAAZmdtZHgAAAA4c21oZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAAAQZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcbWluZgAAACx2bWhkAAAAAQAAAAAAAAAAAAAAIAAAAAAAB2hkbHIAAAAAAAAAAHZpZGUAAAAAABBkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAPFzdGJsAAAAvHN0c2QAAAAAAAAAAQAAALRhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAEAAQABIAAAAzDDgAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGP//AAAALWF2Y0MBAAAAdwBE/8AAAAAxAAAAMQAAAAEAAKPBgAMAgAAAAGaG/QZgAAABAAhzdHRzAAAAAAAAAAEAAAAEAAAABHN0c2MAAAAAAAAAAQAAAAEAAAABAAAAAQAAABxzdHN6AAAAAAAAAAAAAAAEAAACAAAAABgAAAAQAAAAFHN0Y28AAAAAAAAAAQAAABAAAABXdWR0YQAAAAZtZXRhAAAAAAAAACFoZGlyAAAAAAGS/20AAAAIbWRhdAAAAAAB" type="video/mp4">
+</video>
 
 <div id="sidebarToggle" class="sidebar-toggle">☰</div>
 
@@ -942,6 +954,8 @@
         // --- VARIABLES ---
         let wakeLock = null;
         let isMuted = false;
+        // iOS Wake Lock Video
+        const wakeLockVideo = document.getElementById('wakeLockVideo');
         
         // Timezone selection state
         let selectedZone = 'UTC';
@@ -970,6 +984,10 @@
 
         function toggleFullscreen() {
             triggerHaptic();
+            // --- ENABLE WAKE LOCK (VIDEO HACK FOR iOS) ---
+            // Trigger video play specifically on this user interaction
+            requestWakeLock();
+
             if (!document.fullscreenElement) {
                 if(mainPanel.requestFullscreen) mainPanel.requestFullscreen().catch(err => mainPanel.classList.toggle('fullscreen-mode'));
                 else mainPanel.classList.toggle('fullscreen-mode');
@@ -1145,13 +1163,32 @@
             }
         }
 
+        // --- UNIVERSAL WAKE LOCK (ANDROID/PC + iOS HACK) ---
         async function requestWakeLock() {
+            // 1. Try Standard API (Android/Desktop)
             if ('wakeLock' in navigator) {
-                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+                try { 
+                    wakeLock = await navigator.wakeLock.request('screen'); 
+                } catch (err) { console.log('WakeLock API unavailable'); }
+            }
+            
+            // 2. Try Video Hack (iOS/Safari)
+            // This plays the hidden video to force the screen to stay on
+            if(wakeLockVideo && wakeLockVideo.paused) {
+                wakeLockVideo.play().catch(e => console.log("iOS WakeLock User Interaction Required"));
             }
         }
+
         function releaseWakeLock() {
-            if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); }
+            // 1. Release Standard API
+            if (wakeLock !== null) { 
+                wakeLock.release().then(() => { wakeLock = null; }); 
+            }
+            
+            // 2. Pause Video Hack (if no longer needed)
+            if(wakeLockVideo && !wakeLockVideo.paused) {
+                wakeLockVideo.pause();
+            }
         }
 
         function triggerHaptic(pattern = 15) {
@@ -1350,7 +1387,7 @@
 
         // --- CORE LOGIC ---
         function updateTitle(text) {
-            document.title = text ? `(${text}) Chrono Terminal` : "Chrono Terminal V5.6";
+            document.title = text ? `(${text}) Chrono Terminal` : "Chrono Terminal V5.7";
         }
 
         function renderDisplay() {
@@ -1439,6 +1476,9 @@
         document.getElementById('startCountdownBtn').onclick = () => {
             triggerHaptic();
             if(isRunning) return;
+            // Force Wake Lock (Both methods)
+            requestWakeLock();
+            
             const m = parseInt(els.cdMin.value) || 0;
             const s = parseInt(els.cdSec.value) || 0;
             if (currentTimeMs === 0) {
@@ -1449,7 +1489,6 @@
             }
             if(currentTimeMs > 0) {
                 isRunning = true;
-                requestWakeLock();
                 els.progContainer.classList.remove('hidden');
                 timerInterval = setInterval(() => {
                     currentTimeMs -= 100;
@@ -1504,6 +1543,9 @@
 
         document.getElementById('startIntervalBtn').onclick = () => {
             triggerHaptic(); if(isRunning) return; saveSettings(); 
+            // Force Wake Lock
+            requestWakeLock();
+            
             if(intervalState.timeLeft === 0 && intervalState.currentRound === 1 && intervalState.phase === 'WORK') {
                 intervalState.workTime = parseInt(els.intWork.value) || 30;
                 intervalState.restTime = parseInt(els.intRest.value) || 10;
@@ -1511,7 +1553,7 @@
                 intervalState.currentRound = 1; intervalState.phase = 'WORK';
                 intervalState.timeLeft = intervalState.workTime; intervalState.totalDuration = intervalState.workTime;
             }
-            isRunning = true; requestWakeLock(); els.progContainer.classList.remove('hidden');
+            isRunning = true; els.progContainer.classList.remove('hidden');
             if (intervalState.phase === 'WORK') els.progBar.classList.add('work-mode'); else els.progBar.classList.add('rest-mode');
             playTone(parseFloat(els.slider.value)); renderDisplay();
             
@@ -1542,7 +1584,8 @@
         };
 
         document.getElementById('startSwBtn').onclick = () => {
-            triggerHaptic(); if(isRunning) return; isRunning = true; requestWakeLock();
+            triggerHaptic(); if(isRunning) return; isRunning = true; 
+            requestWakeLock();
             timerInterval = setInterval(() => { currentTimeMs += 10; renderDisplay(); }, 10);
         };
         document.getElementById('lapSwBtn').onclick = () => {
