@@ -976,10 +976,16 @@
         }
 
         document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement) mainPanel.classList.add('fullscreen-mode');
-            else {
+            if (document.fullscreenElement) {
+                mainPanel.classList.add('fullscreen-mode');
+                // Force Wake Lock when entering fullscreen (keeps screen on for Clock mode)
+                requestWakeLock();
+            } else {
                 mainPanel.classList.remove('fullscreen-mode');
                 mainPanel.classList.remove('ui-visible'); // Reset visibility on exit
+                
+                // Only release lock if we are NOT running a timer/alarm
+                if (!isRunning && !alarmTargetTime) releaseWakeLock();
             }
         });
 
@@ -987,11 +993,27 @@
         mainPanel.addEventListener('click', (e) => {
             if (!mainPanel.classList.contains('fullscreen-mode')) return;
 
-            // Don't toggle if user is interacting with controls/inputs
-            if (e.target.closest('.panel-header') || e.target.closest('.controls') || e.target.closest('.laps-container')) return;
+            const isUiVisible = mainPanel.classList.contains('ui-visible');
 
-            // Toggle UI Visibility
-            mainPanel.classList.toggle('ui-visible');
+            // If UI is currently visible, we add extra protections to prevent accidental hiding
+            if (isUiVisible) {
+                // 1. Existing check: clicked directly on a control element?
+                if (e.target.closest('.panel-header') || e.target.closest('.controls') || e.target.closest('.laps-container')) return;
+
+                // 2. MOBILE FIX: Clicked in the bottom 40% of the screen?
+                // This creates a "safe zone" around the buttons so missing a button click 
+                // doesn't hide the interface.
+                if (e.clientY > window.innerHeight * 0.60) return;
+            }
+
+            // Toggle Logic:
+            // If visible -> Hide
+            // If hidden -> Show (Tap anywhere works to show)
+            if (isUiVisible) {
+                mainPanel.classList.remove('ui-visible');
+            } else {
+                mainPanel.classList.add('ui-visible');
+            }
         });
 
         // Prevent click propagation from controls to mainPanel to fix the "double tap" issue
@@ -1364,7 +1386,13 @@
             clearInterval(timerInterval);
             isRunning = false;
             stopAlarmSound();
-            releaseWakeLock();
+            
+            // ONLY release wake lock if we are NOT in fullscreen
+            // This ensures "Clock Mode" (which runs nothing) stays awake in fullscreen
+            if (!document.fullscreenElement) {
+                releaseWakeLock();
+            }
+            
             els.phase.innerText = "";
             renderDisplay();
         }
