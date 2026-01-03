@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chrono Terminal V5.5 - OLED Ready</title>
+    <title>Chrono Terminal V5.6 - Clock Mode</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -76,6 +76,7 @@
             overflow-x: hidden;
             width: 100%; 
             transition: background-color 0.3s ease, color 0.3s ease;
+            touch-action: manipulation; /* Improves touch response */
         }
 
         /* --- LAYOUT GRID --- */
@@ -835,6 +836,7 @@
                     <option value="alarm">2. Alarm Clock</option>
                     <option value="interval">3. Interval Timer</option>
                     <option value="stopwatch">4. Stopwatch</option>
+                    <option value="clock">5. Current Time</option>
                 </select>
 
                 <button id="fullscreenToggle" class="fullscreen-btn" title="Toggle Fullscreen (F)">
@@ -915,6 +917,9 @@
                     <div id="lapsListBody"></div>
                 </div>
             </div>
+            
+            <div id="clockControls" class="controls hidden">
+                </div>
         </div>
     </div>
 </div>
@@ -989,6 +994,15 @@
             mainPanel.classList.toggle('ui-visible');
         });
 
+        // Prevent click propagation from controls to mainPanel to fix the "double tap" issue
+        // This ensures clicks on buttons NEVER trigger the hide/show UI logic
+        const controlElements = document.querySelectorAll('.panel-header, .controls, .laps-container');
+        controlElements.forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
 
         // --- TIMER VARIABLES ---
         let timerInterval;
@@ -1051,7 +1065,8 @@
                 countdown: document.getElementById('countdownControls'),
                 alarm: document.getElementById('alarmControls'),
                 interval: document.getElementById('intervalControls'),
-                stopwatch: document.getElementById('stopwatchControls')
+                stopwatch: document.getElementById('stopwatchControls'),
+                clock: document.getElementById('clockControls')
             },
             cdMin: document.getElementById('cdMinutes'),
             cdSec: document.getElementById('cdSeconds'),
@@ -1274,17 +1289,18 @@
                 }).format(now);
             } catch (e) { els.localTime.innerText = "--:--:--"; }
             
-            if(mode === 'alarm') {
+            if(mode === 'alarm' || mode === 'clock') {
                 renderDisplay();
-                if(alarmTargetTime && !isAlarmRinging) {
-                    const parts = new Intl.DateTimeFormat('en-GB', { 
-                        timeZone: selectedZone, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false 
-                    }).formatToParts(now);
-                    const h = parts.find(p=>p.type==='hour').value;
-                    const m = parts.find(p=>p.type==='minute').value;
-                    const s = parts.find(p=>p.type==='second').value;
-                    if(`${h}:${m}` === alarmTargetTime && s === '00') startAlarmSound();
-                }
+            }
+            
+            if(mode === 'alarm' && alarmTargetTime && !isAlarmRinging) {
+                const parts = new Intl.DateTimeFormat('en-GB', { 
+                    timeZone: selectedZone, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false 
+                }).formatToParts(now);
+                const h = parts.find(p=>p.type==='hour').value;
+                const m = parts.find(p=>p.type==='minute').value;
+                const s = parts.find(p=>p.type==='second').value;
+                if(`${h}:${m}` === alarmTargetTime && s === '00') startAlarmSound();
             }
         }
         setInterval(updateWorldClocks, 1000);
@@ -1308,7 +1324,7 @@
 
         // --- CORE LOGIC ---
         function updateTitle(text) {
-            document.title = text ? `(${text}) Chrono Terminal` : "Chrono Terminal V5.4";
+            document.title = text ? `(${text}) Chrono Terminal` : "Chrono Terminal V5.6";
         }
 
         function renderDisplay() {
@@ -1327,15 +1343,20 @@
                 timeStr = formatTime(currentTimeMs);
                 els.display.innerText = timeStr;
                 updateTitle(timeStr);
-            } else if (mode === 'alarm') {
+            } else if (mode === 'alarm' || mode === 'clock') {
                  try {
                      const now = new Date();
                      els.display.innerText = new Intl.DateTimeFormat('en-US', {
                         timeZone: selectedZone, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
                     }).format(now);
                  } catch(e) { els.display.innerText = "--:--:--"; }
-                if(isAlarmRinging) updateTitle("ALARM RINGING");
-                else updateTitle(alarmTargetTime ? "Alarm Set" : "Clock");
+                 
+                 if(mode === 'alarm') {
+                    if(isAlarmRinging) updateTitle("ALARM RINGING");
+                    else updateTitle(alarmTargetTime ? "Alarm Set" : "Clock");
+                 } else {
+                     updateTitle("Clock");
+                 }
             }
         }
 
@@ -1510,7 +1531,15 @@
         els.modeSelect.addEventListener('change', (e) => {
             triggerHaptic(); stopAll(); mode = e.target.value;
             els.progContainer.classList.add('hidden'); els.progBar.classList.remove('work-mode', 'rest-mode');
-            Object.values(els.controls).forEach(el => el.classList.add('hidden')); els.controls[mode].classList.remove('hidden');
+            
+            // Hide all control groups
+            Object.values(els.controls).forEach(el => {
+                if(el) el.classList.add('hidden');
+            });
+            
+            // Show selected control group (if it exists)
+            if(els.controls[mode]) els.controls[mode].classList.remove('hidden');
+
             if (mode === 'stopwatch' && laps.length > 0) els.lapsContainer.classList.remove('hidden'); else els.lapsContainer.classList.add('hidden');
             currentTimeMs = 0; els.phase.innerText = "";
             if(mode === 'interval') { intervalState.timeLeft = 0; intervalState.currentRound = 1; intervalState.phase = 'WORK'; }
