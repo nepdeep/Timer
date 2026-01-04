@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Time Machine - Always On</title>
+    <title>Chrono Terminal V5.8 - Always On</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -76,7 +76,7 @@
             overflow-x: hidden;
             width: 100%; 
             transition: background-color 0.3s ease, color 0.3s ease;
-            touch-action: manipulation;
+            touch-action: manipulation; /* Improves touch response */
         }
 
         /* --- LAYOUT GRID --- */
@@ -182,6 +182,7 @@
             transition: background 0.3s, border 0.3s, box-shadow 0.1s;
         }
 
+        /* VISUALIZER CLASS (Single blip) */
         .glass-panel.audio-active {
             box-shadow: 0 0 30px var(--neon-blue), inset 0 0 20px rgba(0, 243, 255, 0.2);
             border-color: var(--neon-blue);
@@ -226,6 +227,7 @@
             padding: 20px;
         }
 
+        /* Hide Header & Controls by default in Fullscreen */
         .glass-panel.fullscreen-mode .panel-header,
         .glass-panel.fullscreen-mode .controls,
         .glass-panel.fullscreen-mode .phase-indicator,
@@ -233,16 +235,17 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
-            position: absolute; 
+            position: absolute; /* Take out of flow to let clock center */
         }
         
+        /* Positioning Controls Overlay in Fullscreen */
         .glass-panel.fullscreen-mode .panel-header {
             top: 40px;
             width: 90%;
             max-width: 600px;
         }
         .glass-panel.fullscreen-mode .controls {
-            bottom: 60px;
+            bottom: 60px; /* Space for progress bar */
             width: 90%;
             max-width: 600px;
         }
@@ -251,16 +254,17 @@
             width: 100%;
         }
 
+        /* --- VISIBLE STATE (GESTURE TOGGLE) --- */
         .glass-panel.fullscreen-mode.ui-visible .panel-header,
         .glass-panel.fullscreen-mode.ui-visible .controls,
         .glass-panel.fullscreen-mode.ui-visible .phase-indicator,
         .glass-panel.fullscreen-mode.ui-visible .laps-container {
             opacity: 1;
             pointer-events: auto;
-            position: absolute; 
-            z-index: 2001; 
+            position: absolute; /* Keep absolute to stay overlaid */
         }
         
+        /* Ensure Inputs/Buttons work in overlay */
         .glass-panel.fullscreen-mode.ui-visible .controls {
             background: rgba(0,0,0,0.8);
             padding: 20px;
@@ -274,6 +278,7 @@
             width: 100%;
             gap: 10px;
             margin-bottom: 10px;
+            /* Ensure header is relative in normal mode */
             position: relative; 
             z-index: 1001;
         }
@@ -434,6 +439,7 @@
             letter-spacing: -3px;
             text-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
             line-height: 1.1;
+            /* Ensure it stays visible in FS */
             z-index: 900;
         }
         
@@ -464,6 +470,7 @@
             transition: all 0.3s;
         }
 
+        /* EDGE-TO-EDGE PROGRESS (Fullscreen) */
         .glass-panel.fullscreen-mode .progress-track {
             position: fixed;
             bottom: 0;
@@ -472,8 +479,8 @@
             margin: 0;
             border-radius: 0;
             border: none;
-            height: 8px;
-            z-index: 999;
+            height: 8px; /* Slightly thicker */
+            z-index: 999; /* Visible always */
             background: rgba(255,255,255,0.1);
         }
 
@@ -603,17 +610,8 @@
         }
         .btn-stop:hover { background: var(--neon-red); color: #fff; box-shadow: 0 0 20px rgba(255, 0, 85, 0.6); }
 
-        .btn-reset { 
-            border-color: rgba(255, 230, 0, 0.5); 
-            color: var(--neon-yellow); 
-            background: rgba(255, 230, 0, 0.05);
-        }
-        .btn-reset:hover { 
-            background: var(--neon-yellow); 
-            color: #000; 
-            box-shadow: 0 0 20px rgba(255, 230, 0, 0.6); 
-            border-color: var(--neon-yellow);
-        }
+        .btn-reset { color: var(--text-muted); border-color: var(--glass-border); }
+        .btn-reset:hover { background: var(--text-muted); color: #000; }
 
         .btn-lap {
             border-color: var(--neon-purple);
@@ -636,52 +634,13 @@
 
         /* --- AUDIO SETTINGS --- */
         .audio-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-        
-        .audio-controls-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr; 
-            gap: 10px;
-            width: 100%;
-        }
-
-        .audio-input-col { display: flex; flex-direction: column; gap: 10px; }
-        .audio-btn-col { display: flex; flex-direction: column; gap: 10px; }
-
-        .audio-input-small { 
-            padding: 10px !important; 
-            font-size: 0.9rem !important; 
-            height: 40px; 
-            border: 1px solid var(--glass-border); 
-            width: 100%;
-            margin: 0 !important;
-        }
-        
-        .freq-wrapper { 
-            display: flex; 
-            align-items: center; 
-            background: var(--input-bg); 
-            border: 1px solid var(--glass-border); 
-            border-radius: 12px; 
-            padding-right: 15px; 
-            flex: 1; 
-            transition: 0.3s; 
-            height: 40px; 
-            width: 100%;
-        }
+        .audio-row-top { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .audio-row-top select { flex: 2; margin-bottom: 0; }
+        .audio-input-small { padding: 10px !important; font-size: 0.9rem !important; height: 40px; border: 1px solid var(--glass-border); }
+        .freq-wrapper { display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding-right: 15px; flex: 1; transition: 0.3s; height: 40px; }
         .freq-wrapper input { border: none; background: transparent; box-shadow: none; margin: 0; height: 100%; padding: 0 12px; font-size: 0.9rem; flex: 1; }
         .unit-label { color: var(--text-muted); font-family: var(--font-display); font-size: 0.85rem; user-select: none; }
-        
-        .btn-small { 
-            padding: 0 10px; 
-            height: 40px; 
-            margin: 0; 
-            font-size: 0.8rem; 
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
+        .btn-small { padding: 0 15px; height: 40px; min-width: 60px; margin: 0; flex: 0 0 auto; font-size: 0.8rem; }
         .audio-row-bottom { display: flex; align-items: center; gap: 10px; background: var(--input-bg); padding: 10px; border-radius: 10px; }
         .decay-label { font-family: var(--font-display); font-size: 0.7rem; color: var(--text-muted); width: 90px; }
         .decay-value { color: var(--neon-blue); font-weight: bold; }
@@ -710,43 +669,16 @@
 
         .hidden { display: none !important; }
 
-        /* --- VIDEO WAKE LOCK HACK (INVISIBLE) --- */
-        /* Required for iOS/Safari to keep screen on */
+        /* VIDEO WAKE LOCK HACK (INVISIBLE) */
         #wakeLockVideo {
             position: fixed;
             top: 0;
             left: 0;
             width: 1px;
             height: 1px;
-            opacity: 0.01; /* Must not be display:none for iOS to respect it */
+            opacity: 0.001; /* Must not be display:none */
             pointer-events: none;
             z-index: -9999;
-        }
-
-        /* --- TIMER COMPLETE BLINK ANIMATION --- */
-        @keyframes text-alarm-blink {
-            0%, 100% { 
-                opacity: 1; 
-                color: var(--neon-red);
-                text-shadow: 0 0 40px var(--neon-red), 0 0 10px rgba(255, 0, 85, 0.8);
-            }
-            50% { 
-                opacity: 0.1; 
-                color: var(--text-muted);
-                text-shadow: none;
-            }
-        }
-
-        .blink-alarm {
-            animation: text-alarm-blink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-            -webkit-text-fill-color: initial !important; 
-            background: none !important;
-        }
-
-        .glass-panel.fullscreen-mode .digital-display.blink-alarm {
-            color: var(--neon-red) !important;
-            -webkit-text-fill-color: var(--neon-red) !important;
-            text-shadow: 0 0 50px var(--neon-red);
         }
 
         /* =========================================
@@ -755,7 +687,7 @@
         @media (max-width: 768px) {
             .sidebar { width: 85vw; }
             
-            /* Expand the panel to fill more vertical space */
+            /* 1. Expand the panel to fill more vertical space */
             .glass-panel { 
                 padding: 15px; 
                 min-height: 65vh; 
@@ -764,7 +696,7 @@
                 justify-content: space-between;
             }
 
-            /* MAXIMIZE THE CLOCK DISPLAY */
+            /* 2. MAXIMIZE THE CLOCK DISPLAY */
             .digital-display { 
                 font-size: 14vw; 
                 margin: 0;
@@ -775,7 +707,7 @@
                 line-height: 1;
             }
 
-            /* SHRINK INPUTS & CONTROLS */
+            /* 3. SHRINK INPUTS & CONTROLS */
             input, select { 
                 padding: 8px 10px;
                 font-size: 1rem;
@@ -793,7 +725,6 @@
             h3 { margin-bottom: 10px; }
 
             /* --- OLED BLACK MODE (MOBILE FULLSCREEN) --- */
-            /* Saves battery on mobile devices in Always On mode */
             .glass-panel.fullscreen-mode {
                 background: #000000 !important; /* PURE BLACK */
                 background-image: none !important;
@@ -820,8 +751,8 @@
 </head>
 <body>
 
-<video id="wakeLockVideo" playsinline loop muted autoplay>
-    <source src="data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAQBAAAACAAAABGdtb2QAAAAgbW9vdgAAAGxtdmhkAAAAAACj/0AAo/9AAAEAAAEAAAEAAgAAAQAABnB0cmFrAAAAXHRraGQAAAAHAAAAA6P/QACj/0AAAAEAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAEAAAAACAAAAAAABAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAEAAAEAAAAAAAAAAAAAZmdtZHgAAAA4c21oZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAAAQZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcbWluZgAAACx2bWhkAAAAAQAAAAAAAAAAAAAAIAAAAAAAB2hkbHIAAAAAAAAAAHZpZGUAAAAAABBkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAPFzdGJsAAAAvHN0c2QAAAAAAAAAAQAAALRhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAEAAQABIAAAAzDDgAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGP//AAAALWF2Y0MBAAAAdwBE/8AAAAAxAAAAMQAAAAEAAKPBgAMAgAAAAGaG/QZgAAABAAhzdHRzAAAAAAAAAAEAAAAEAAAABHN0c2MAAAAAAAAAAQAAAAEAAAABAAAAAQAAABxzdHN6AAAAAAAAAAAAAAAEAAACAAAAABgAAAAQAAAAFHN0Y28AAAAAAAAAAQAAABAAAABXdWR0YQAAAAZtZXRhAAAAAAAAACFoZGlyAAAAAAGS/20AAAAIbWRhdAAAAAAB" type="video/mp4">
+<video id="wakeLockVideo" playsinline loop muted style="position:fixed; top:0; left:0; width:1px; height:1px; opacity:0.001; pointer-events:none; z-index:-9999;">
+    <source src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAACKBtZGF0AAACoAYF//+c3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0OCByMjY2MCA1NTQgZTljNWRlMyAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMTYgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0xIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDM6MHgxMTMgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTEgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz02IGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MyBiX3B5cmFtaWQ9MiBiX2FkYXB0PTEgYl9iaWFzPTAgZGlyZWN0PTEgd2VpZ2h0Yj0xIG9wZW5fZ29wPTAgd2VpZ2h0cD0yIGtleWludD0yNTAga2V5aW50X21pbj0yNSBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTQwIHJjPWNyZiBtYnRyZWU9MSBjcmY9MjMuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0xOjEuMDAAgAAAAA9liIQAV/0TAAYdgAAAZMBgA==" type="video/mp4">
 </video>
 
 <div id="sidebarToggle" class="sidebar-toggle">☰</div>
@@ -852,24 +783,21 @@
                 <button class="btn-preset" id="presetRetro">RETRO</button>
             </div>
 
-            <div class="audio-controls-grid">
-                <div class="audio-input-col">
-                    <select id="waveType" class="audio-input-small" aria-label="Waveform type">
-                        <option value="sine">Sine</option>
-                        <option value="square">Square</option>
-                        <option value="sawtooth">Sawtooth</option>
-                    </select>
-                    
-                    <div class="freq-wrapper">
-                        <input type="number" id="frequencyInput" min="10" max="1000" value="200">
-                        <span class="unit-label">Hz</span>
-                    </div>
+            <div class="audio-row-top">
+                <select id="waveType" class="audio-input-small" aria-label="Waveform type">
+                    <option value="sine">Sine</option>
+                    <option value="square">Square</option>
+                    <option value="sawtooth">Sawtooth</option>
+                </select>
+                
+                <div class="freq-wrapper">
+                    <input type="number" id="frequencyInput" min="10" max="1000" value="90">
+                    <span class="unit-label">Hz</span>
                 </div>
-
-                <div class="audio-btn-col">
-                    <button id="testSoundBtn" class="btn-small">Test</button>
-                    <button id="applySoundBtn" class="btn-small">Save</button>
-                </div>
+            </div>
+            <div class="audio-row-top" style="margin-top:5px;">
+                <button id="testSoundBtn" class="btn-small">Test</button>
+                <button id="applySoundBtn" class="btn-small">Save</button>
             </div>
             
             <div class="audio-row-bottom" style="margin-top:10px;">
@@ -920,11 +848,11 @@
             
             <div id="panelHeader" class="panel-header">
                 <select id="modeSelect">
-                    <option value="clock">1. Current Time</option>
-                    <option value="countdown">2. Timer (Countdown)</option>
-                    <option value="alarm">3. Alarm Clock</option>
-                    <option value="interval">4. Interval Timer</option>
-                    <option value="stopwatch">5. Stopwatch</option>
+                    <option value="countdown">1. Timer (Countdown)</option>
+                    <option value="alarm">2. Alarm Clock</option>
+                    <option value="interval">3. Interval Timer</option>
+                    <option value="stopwatch">4. Stopwatch</option>
+                    <option value="clock">5. Current Time</option>
                 </select>
 
                 <button id="fullscreenToggle" class="fullscreen-btn" title="Toggle Fullscreen (F)">
@@ -1014,6 +942,82 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // ========================================
+        // ROBUST WAKE LOCK MANAGER (Integrated)
+        // ========================================
+        const WakeLockManager = {
+            lock: null,
+            video: document.getElementById('wakeLockVideo'),
+            isEnabled: false,
+            
+            init() {
+                // 1. Auto-recover lock when tab becomes visible again
+                document.addEventListener('visibilitychange', () => {
+                    if (this.lock !== null && document.visibilityState === 'visible') {
+                        this.request(); // Re-apply if we had it
+                    }
+                });
+
+                // 2. iOS Unlocker: Bind to first user interaction
+                const unlockHandler = () => {
+                    if (this.video) {
+                        this.video.play().then(() => {
+                            this.video.pause(); 
+                            this.video.currentTime = 0;
+                        }).catch(e => console.log("Video warm-up failed", e));
+                    }
+                    document.body.removeEventListener('click', unlockHandler);
+                    document.body.removeEventListener('touchstart', unlockHandler);
+                };
+                
+                document.body.addEventListener('click', unlockHandler);
+                document.body.addEventListener('touchstart', unlockHandler);
+            },
+            
+            async request() {
+                // Method A: Standard API
+                if ('wakeLock' in navigator) {
+                    try {
+                        this.lock = await navigator.wakeLock.request('screen');
+                        this.lock.addEventListener('release', () => {
+                            console.log('Wake Lock released by system');
+                            if (this.isEnabled) this.request(); 
+                        });
+                        console.log('API Wake Lock Active');
+                    } catch (err) { console.log('API Wake Lock Failed:', err); }
+                }
+                
+                // Method B: iOS Video Fallback
+                if (this.video && this.isEnabled) {
+                    try {
+                        await this.video.play();
+                        console.log('Video Wake Lock Active');
+                    } catch (err) { console.log('Video Play Failed:', err); }
+                }
+            },
+            
+            async enable() {
+                if (this.isEnabled) return;
+                this.isEnabled = true;
+                await this.request();
+            },
+            
+            async disable() {
+                this.isEnabled = false;
+                if (this.lock !== null) {
+                    try { await this.lock.release(); this.lock = null; } catch (err) {}
+                }
+                if (this.video) {
+                    this.video.pause();
+                    this.video.currentTime = 0;
+                }
+                console.log('Wake Lock Disabled');
+            }
+        };
+
+        // Initialize Manager
+        WakeLockManager.init();
+
         // --- LAYOUT LOGIC ---
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
@@ -1024,10 +1028,7 @@
         const themeSwitch = document.getElementById('themeSwitch');
 
         // --- VARIABLES ---
-        let wakeLock = null;
         let isMuted = false;
-        // iOS/Android Video Hack Element
-        const wakeLockVideo = document.getElementById('wakeLockVideo');
         
         // Timezone selection state
         let selectedZone = 'UTC';
@@ -1056,9 +1057,8 @@
 
         function toggleFullscreen() {
             triggerHaptic();
-            // --- ENABLE WAKE LOCK ON INTERACTION ---
-            // Trigger video play specifically on this user interaction click (for iOS)
-            requestWakeLock();
+            // Force Wake Lock ON when entering fullscreen
+            WakeLockManager.enable();
 
             if (!document.fullscreenElement) {
                 if(mainPanel.requestFullscreen) mainPanel.requestFullscreen().catch(err => mainPanel.classList.toggle('fullscreen-mode'));
@@ -1072,26 +1072,13 @@
         document.addEventListener('fullscreenchange', () => {
             if (document.fullscreenElement) {
                 mainPanel.classList.add('fullscreen-mode');
-                // Force Wake Lock when entering fullscreen (keeps screen on for Clock mode)
-                requestWakeLock();
+                WakeLockManager.enable();
             } else {
                 mainPanel.classList.remove('fullscreen-mode');
-                mainPanel.classList.remove('ui-visible'); // Reset visibility on exit
+                mainPanel.classList.remove('ui-visible'); 
                 
                 // Only release lock if we are NOT running a timer/alarm
-                if (!isRunning && !alarmTargetTime) releaseWakeLock();
-            }
-        });
-        
-        // --- VISIBILITY CHANGE HANDLER (Re-acquire Lock on Android) ---
-        // If the user minimizes Chrome and comes back, the wake lock is often lost.
-        // We check if we *should* have it, and ask for it again.
-        document.addEventListener("visibilitychange", async () => {
-            if (document.visibilityState === 'visible') {
-                const isFullscreen = mainPanel.classList.contains('fullscreen-mode') || document.fullscreenElement;
-                if (isFullscreen || isRunning || alarmTargetTime) {
-                   await requestWakeLock();
-                }
+                if (!isRunning && !alarmTargetTime) WakeLockManager.disable();
             }
         });
 
@@ -1101,18 +1088,12 @@
 
             const isUiVisible = mainPanel.classList.contains('ui-visible');
 
-            // If UI is currently visible, we add extra protections to prevent accidental hiding
+            // If UI is currently visible, add protections
             if (isUiVisible) {
-                // 1. Existing check: clicked directly on a control element?
                 if (e.target.closest('.panel-header') || e.target.closest('.controls') || e.target.closest('.laps-container')) return;
-
-                // 2. MOBILE FIX: Clicked in the bottom 40% of the screen?
-                // This creates a "safe zone" around the buttons so missing a button click 
-                // doesn't hide the interface.
                 if (e.clientY > window.innerHeight * 0.60) return;
             }
 
-            // Toggle Logic:
             if (isUiVisible) {
                 mainPanel.classList.remove('ui-visible');
             } else {
@@ -1120,7 +1101,6 @@
             }
         });
 
-        // Prevent click propagation from controls to mainPanel
         const controlElements = document.querySelectorAll('.panel-header, .controls, .laps-container');
         controlElements.forEach(el => {
             el.addEventListener('click', (e) => {
@@ -1132,7 +1112,7 @@
         // --- TIMER VARIABLES ---
         let timerInterval;
         let isRunning = false;
-        let mode = 'clock'; 
+        let mode = 'countdown'; 
         let initialCountdownTotal = 0; 
         
         let userLat = 0.00;
@@ -1151,7 +1131,7 @@
         let lastLapTimeMs = 0;
 
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let audioConfig = { type: 'sine', freq: 200 };
+        let audioConfig = { type: 'sine', freq: 90 };
         let beepLoop = null;
 
         // --- DOM ELEMENTS ---
@@ -1165,14 +1145,12 @@
             zoneLabel: document.getElementById('zoneLabel'),
             geo: document.getElementById('geoDisplay'),
             
-            // World Times
             timeGMT: document.getElementById('timeGMT'),
             timeAMS: document.getElementById('timeAMS'),
             timeKTM: document.getElementById('timeKTM'),
             timeLA: document.getElementById('timeLA'),
             timeMEL: document.getElementById('timeMEL'),
             
-            // World Buttons
             btnGMT: document.getElementById('btnGMT'),
             btnAMS: document.getElementById('btnAMS'),
             btnKTM: document.getElementById('btnKTM'),
@@ -1208,8 +1186,6 @@
             presetRetro: document.getElementById('presetRetro')
         };
 
-        // --- NEW FEATURES ---
-
         function saveSettings() {
             localStorage.setItem('chrono_lat', userLat);
             localStorage.setItem('chrono_lon', userLon);
@@ -1243,63 +1219,6 @@
                 if(btn) selectZone(btn);
             }
         }
-
-        // --- UNIVERSAL WAKE LOCK (ANDROID/PC + iOS HACK) ---
-        async function requestWakeLock() {
-            // 1. Try Standard API (Android/Desktop)
-            if ('wakeLock' in navigator) {
-                try { 
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    // If lock is lost (e.g. system revokes it), clear variable
-                    wakeLock.addEventListener('release', () => {
-                        wakeLock = null;
-                        console.log('Wake Lock Released by System');
-                    });
-                } catch (err) { console.log('WakeLock API unavailable/rejected'); }
-            }
-            
-            // 2. Try Video Hack (iOS/Safari/Android Chrome Backup)
-            // This plays the hidden video to force the screen to stay on
-            if(wakeLockVideo && wakeLockVideo.paused) {
-                // Attempt to play. Must originate from user gesture initially.
-                try {
-                    await wakeLockVideo.play();
-                } catch(e) { 
-                    console.log("WakeLock Video: Interaction required"); 
-                }
-            }
-        }
-
-        function releaseWakeLock() {
-            // 1. Release Standard API
-            if (wakeLock !== null) { 
-                wakeLock.release().then(() => { wakeLock = null; }); 
-            }
-            
-            // 2. Pause Video Hack (if no longer needed)
-            if(wakeLockVideo && !wakeLockVideo.paused) {
-                wakeLockVideo.pause();
-            }
-        }
-
-        // --- HEARTBEAT TO PREVENT DIMMING ---
-        // Android Chrome sometimes sleeps even with wake lock if no media plays.
-        // We force check every few seconds.
-        setInterval(() => {
-            const isFullscreen = mainPanel.classList.contains('fullscreen-mode') || document.fullscreenElement;
-            const isActive = isRunning || alarmTargetTime;
-
-            if (isFullscreen || isActive) {
-                // A. Re-request API lock if it was dropped
-                if (!wakeLock) {
-                    requestWakeLock();
-                }
-                // B. Force the video to keep playing (Crucial for Android/iOS)
-                if (wakeLockVideo && wakeLockVideo.paused) {
-                    wakeLockVideo.play().catch(e => console.log("Re-triggering video wake lock"));
-                }
-            }
-        }, 4000); // Check every 4 seconds
 
         function triggerHaptic(pattern = 15) {
             if (navigator.vibrate) navigator.vibrate(pattern);
@@ -1413,8 +1332,6 @@
             isAlarmRinging = true;
             els.snoozeBtn.classList.remove('hidden');
             
-            els.display.classList.add('blink-alarm');
-
             const decay = parseFloat(els.slider.value);
             
             mainPanel.style.animationDuration = `${decay}s`;
@@ -1432,8 +1349,6 @@
         function stopAlarmSound() {
             if(beepLoop) { clearInterval(beepLoop); beepLoop = null; }
             isAlarmRinging = false;
-            
-            els.display.classList.remove('blink-alarm');
             
             mainPanel.classList.remove('alarm-breathing');
             mainPanel.style.animationDuration = ''; 
@@ -1493,7 +1408,7 @@
 
         // --- CORE LOGIC ---
         function updateTitle(text) {
-            document.title = text ? `(${text}) Timer App` : "Timer App";
+            document.title = text ? `(${text}) Chrono Terminal` : "Chrono Terminal V5.8";
         }
 
         function renderDisplay() {
@@ -1535,8 +1450,8 @@
             stopAlarmSound();
             
             // ONLY release wake lock if we are NOT in fullscreen
-            if (!document.fullscreenElement && !mainPanel.classList.contains('fullscreen-mode')) {
-                releaseWakeLock();
+            if (!document.fullscreenElement) {
+                WakeLockManager.disable();
             }
             
             els.phase.innerText = "";
@@ -1581,7 +1496,8 @@
         document.getElementById('startCountdownBtn').onclick = () => {
             triggerHaptic();
             if(isRunning) return;
-            requestWakeLock();
+            
+            WakeLockManager.enable();
             
             const m = parseInt(els.cdMin.value) || 0;
             const s = parseInt(els.cdSec.value) || 0;
@@ -1624,13 +1540,13 @@
                 alarmTargetTime = els.alarmInput.value;
                 document.getElementById('setAlarmBtn').parentElement.classList.add('hidden'); 
                 els.alarmActiveUI.classList.remove('hidden'); els.snoozeBtn.classList.add('hidden');
-                requestWakeLock();
+                WakeLockManager.enable();
             }
         };
         document.getElementById('disableAlarmBtn').onclick = () => {
             triggerHaptic(); stopAlarmSound(); alarmTargetTime = null;
             els.alarmActiveUI.classList.add('hidden'); document.getElementById('setAlarmBtn').parentElement.classList.remove('hidden');
-            releaseWakeLock(); updateTitle("");
+            WakeLockManager.disable(); updateTitle("");
         };
         document.getElementById('snoozeBtn').onclick = () => {
             triggerHaptic(); stopAlarmSound(); els.snoozeBtn.classList.add('hidden');
@@ -1647,7 +1563,8 @@
 
         document.getElementById('startIntervalBtn').onclick = () => {
             triggerHaptic(); if(isRunning) return; saveSettings(); 
-            requestWakeLock();
+            
+            WakeLockManager.enable();
             
             if(intervalState.timeLeft === 0 && intervalState.currentRound === 1 && intervalState.phase === 'WORK') {
                 intervalState.workTime = parseInt(els.intWork.value) || 30;
@@ -1688,7 +1605,7 @@
 
         document.getElementById('startSwBtn').onclick = () => {
             triggerHaptic(); if(isRunning) return; isRunning = true; 
-            requestWakeLock();
+            WakeLockManager.enable();
             timerInterval = setInterval(() => { currentTimeMs += 10; renderDisplay(); }, 10);
         };
         document.getElementById('lapSwBtn').onclick = () => {
@@ -1710,10 +1627,12 @@
             triggerHaptic(); stopAll(); mode = e.target.value;
             els.progContainer.classList.add('hidden'); els.progBar.classList.remove('work-mode', 'rest-mode');
             
+            // Hide all control groups
             Object.values(els.controls).forEach(el => {
                 if(el) el.classList.add('hidden');
             });
             
+            // Show selected control group (if it exists)
             if(els.controls[mode]) els.controls[mode].classList.remove('hidden');
 
             if (mode === 'stopwatch' && laps.length > 0) els.lapsContainer.classList.remove('hidden'); else els.lapsContainer.classList.add('hidden');
@@ -1723,11 +1642,8 @@
         });
 
         loadSettings(); 
-        
-        // --- STARTUP LOGIC ---
-        els.modeSelect.value = 'clock';
-        Object.values(els.controls).forEach(el => el && el.classList.add('hidden'));
-        if(els.controls.clock) els.controls.clock.classList.remove('hidden');
+        els.modeSelect.value = 'countdown';
+        els.controls.countdown.classList.remove('hidden');
         renderDisplay();
     });
 </script>
