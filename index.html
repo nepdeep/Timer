@@ -728,7 +728,7 @@
             left: 0;
             width: 1px;
             height: 1px;
-            opacity: 0.01; /* Must not be display:none */
+            opacity: 0.01; /* Must not be display:none for iOS to respect it */
             pointer-events: none;
             z-index: -9999;
         }
@@ -1068,7 +1068,7 @@
         function toggleFullscreen() {
             triggerHaptic();
             // --- ENABLE WAKE LOCK (VIDEO HACK FOR iOS) ---
-            // Trigger video play specifically on this user interaction
+            // Trigger video play specifically on this user interaction click
             requestWakeLock();
 
             if (!document.fullscreenElement) {
@@ -1091,6 +1091,17 @@
                 
                 // Only release lock if we are NOT running a timer/alarm
                 if (!isRunning && !alarmTargetTime) releaseWakeLock();
+            }
+        });
+        
+        // --- VISIBILITY CHANGE HANDLER (Re-acquire Lock on Android) ---
+        // If the user minimizes Chrome and comes back, the wake lock is often lost.
+        // We check if we *should* have it, and ask for it again.
+        document.addEventListener("visibilitychange", async () => {
+            if (document.visibilityState === 'visible') {
+                if (document.fullscreenElement || isRunning || alarmTargetTime) {
+                   await requestWakeLock();
+                }
             }
         });
 
@@ -1252,13 +1263,18 @@
             if ('wakeLock' in navigator) {
                 try { 
                     wakeLock = await navigator.wakeLock.request('screen'); 
-                } catch (err) { console.log('WakeLock API unavailable'); }
+                } catch (err) { console.log('WakeLock API unavailable/rejected'); }
             }
             
             // 2. Try Video Hack (iOS/Safari)
             // This plays the hidden video to force the screen to stay on
             if(wakeLockVideo && wakeLockVideo.paused) {
-                wakeLockVideo.play().catch(e => console.log("iOS WakeLock User Interaction Required"));
+                // Attempt to play. Must originate from user gesture initially.
+                try {
+                    await wakeLockVideo.play();
+                } catch(e) { 
+                    console.log("iOS WakeLock: Interaction required to play video"); 
+                }
             }
         }
 
