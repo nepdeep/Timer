@@ -262,6 +262,8 @@
             opacity: 1;
             pointer-events: auto;
             position: absolute; /* Keep absolute to stay overlaid */
+            /* FIX: Ensure controls are above the display (z-index 900) */
+            z-index: 2001; 
         }
         
         /* Ensure Inputs/Buttons work in overlay */
@@ -891,11 +893,11 @@
             
             <div id="panelHeader" class="panel-header">
                 <select id="modeSelect">
-                    <option value="countdown">1. Timer (Countdown)</option>
-                    <option value="alarm">2. Alarm Clock</option>
-                    <option value="interval">3. Interval Timer</option>
-                    <option value="stopwatch">4. Stopwatch</option>
-                    <option value="clock">5. Current Time</option>
+                    <option value="clock">1. Current Time</option>
+                    <option value="countdown">2. Timer (Countdown)</option>
+                    <option value="alarm">3. Alarm Clock</option>
+                    <option value="interval">4. Interval Timer</option>
+                    <option value="stopwatch">5. Stopwatch</option>
                 </select>
 
                 <button id="fullscreenToggle" class="fullscreen-btn" title="Toggle Fullscreen (F)">
@@ -1094,7 +1096,7 @@
         // --- TIMER VARIABLES ---
         let timerInterval;
         let isRunning = false;
-        let mode = 'countdown'; 
+        let mode = 'clock'; // DEFAULT MODE CHANGED TO CLOCK
         let initialCountdownTotal = 0; 
         
         let userLat = 0.00;
@@ -1665,11 +1667,17 @@
         });
 
         loadSettings(); 
-        els.modeSelect.value = 'countdown';
-        els.controls.countdown.classList.remove('hidden');
+        
+        // --- CHANGED STARTUP LOGIC ---
+        // 1. Force the dropdown to 'clock'
+        els.modeSelect.value = 'clock';
+        // 2. Hide whatever might have been shown by default
+        Object.values(els.controls).forEach(el => el && el.classList.add('hidden'));
+        // 3. Show the clock control container (if any, usually empty for clock mode)
+        if(els.controls.clock) els.controls.clock.classList.remove('hidden');
+        
         renderDisplay();
     });
 </script>
 </body>
 </html>
-
