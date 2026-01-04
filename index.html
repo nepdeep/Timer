@@ -1037,7 +1037,7 @@
         // --- VARIABLES ---
         let wakeLock = null;
         let isMuted = false;
-        // iOS Wake Lock Video
+        // iOS/Android Video Hack
         const wakeLockVideo = document.getElementById('wakeLockVideo');
         
         // Timezone selection state
@@ -1099,7 +1099,8 @@
         // We check if we *should* have it, and ask for it again.
         document.addEventListener("visibilitychange", async () => {
             if (document.visibilityState === 'visible') {
-                if (document.fullscreenElement || isRunning || alarmTargetTime) {
+                const isFullscreen = mainPanel.classList.contains('fullscreen-mode') || document.fullscreenElement;
+                if (isFullscreen || isRunning || alarmTargetTime) {
                    await requestWakeLock();
                 }
             }
@@ -1262,18 +1263,23 @@
             // 1. Try Standard API (Android/Desktop)
             if ('wakeLock' in navigator) {
                 try { 
-                    wakeLock = await navigator.wakeLock.request('screen'); 
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    // If lock is lost (e.g. system revokes it), clear variable
+                    wakeLock.addEventListener('release', () => {
+                        wakeLock = null;
+                        console.log('Wake Lock Released by System');
+                    });
                 } catch (err) { console.log('WakeLock API unavailable/rejected'); }
             }
             
-            // 2. Try Video Hack (iOS/Safari)
+            // 2. Try Video Hack (iOS/Safari/Android Chrome Backup)
             // This plays the hidden video to force the screen to stay on
             if(wakeLockVideo && wakeLockVideo.paused) {
                 // Attempt to play. Must originate from user gesture initially.
                 try {
                     await wakeLockVideo.play();
                 } catch(e) { 
-                    console.log("iOS WakeLock: Interaction required to play video"); 
+                    console.log("WakeLock Video: Interaction required"); 
                 }
             }
         }
@@ -1289,6 +1295,25 @@
                 wakeLockVideo.pause();
             }
         }
+
+        // --- HEARTBEAT TO PREVENT DIMMING ---
+        // Android Chrome sometimes sleeps even with wake lock if no media plays.
+        // We force check every few seconds.
+        setInterval(() => {
+            const isFullscreen = mainPanel.classList.contains('fullscreen-mode') || document.fullscreenElement;
+            const isActive = isRunning || alarmTargetTime;
+
+            if (isFullscreen || isActive) {
+                // A. Re-request API lock if it was dropped
+                if (!wakeLock) {
+                    requestWakeLock();
+                }
+                // B. Force the video to keep playing (Crucial for Android/iOS)
+                if (wakeLockVideo && wakeLockVideo.paused) {
+                    wakeLockVideo.play().catch(e => console.log("Re-triggering video wake lock"));
+                }
+            }
+        }, 4000); // Check every 4 seconds
 
         function triggerHaptic(pattern = 15) {
             if (navigator.vibrate) navigator.vibrate(pattern);
@@ -1535,7 +1560,8 @@
             
             // ONLY release wake lock if we are NOT in fullscreen
             // This ensures "Clock Mode" (which runs nothing) stays awake in fullscreen
-            if (!document.fullscreenElement) {
+            // because the Fullscreen mode relies on the video loop or API staying active.
+            if (!document.fullscreenElement && !mainPanel.classList.contains('fullscreen-mode')) {
                 releaseWakeLock();
             }
             
