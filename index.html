@@ -612,8 +612,18 @@
         }
         .btn-stop:hover { background: var(--neon-red); color: #fff; box-shadow: 0 0 20px rgba(255, 0, 85, 0.6); }
 
-        .btn-reset { color: var(--text-muted); border-color: var(--glass-border); }
-        .btn-reset:hover { background: var(--text-muted); color: #000; }
+        /* --- UPDATED RESET BUTTON STYLE --- */
+        .btn-reset { 
+            border-color: rgba(255, 230, 0, 0.5); 
+            color: var(--neon-yellow); 
+            background: rgba(255, 230, 0, 0.05);
+        }
+        .btn-reset:hover { 
+            background: var(--neon-yellow); 
+            color: #000; 
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.6); 
+            border-color: var(--neon-yellow);
+        }
 
         .btn-lap {
             border-color: var(--neon-purple);
@@ -718,9 +728,37 @@
             left: 0;
             width: 1px;
             height: 1px;
-            opacity: 0.01; /* Must not be display:none */
+            opacity: 0.01; /* Must not be display:none for iOS to respect it */
             pointer-events: none;
             z-index: -9999;
+        }
+
+        /* --- TIMER COMPLETE BLINK ANIMATION --- */
+        @keyframes text-alarm-blink {
+            0%, 100% { 
+                opacity: 1; 
+                color: var(--neon-red);
+                text-shadow: 0 0 40px var(--neon-red), 0 0 10px rgba(255, 0, 85, 0.8);
+            }
+            50% { 
+                opacity: 0.1; 
+                color: var(--text-muted);
+                text-shadow: none;
+            }
+        }
+
+        .blink-alarm {
+            animation: text-alarm-blink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            /* Ensure color overrides gradient text in light/dark mode */
+            -webkit-text-fill-color: initial !important; 
+            background: none !important;
+        }
+
+        /* Ensure it looks correct in Fullscreen OLED mode */
+        .glass-panel.fullscreen-mode .digital-display.blink-alarm {
+            color: var(--neon-red) !important;
+            -webkit-text-fill-color: var(--neon-red) !important;
+            text-shadow: 0 0 50px var(--neon-red);
         }
 
         /* =========================================
@@ -999,7 +1037,7 @@
         // --- VARIABLES ---
         let wakeLock = null;
         let isMuted = false;
-        // iOS Wake Lock Video
+        // iOS/Android Video Hack
         const wakeLockVideo = document.getElementById('wakeLockVideo');
         
         // Timezone selection state
@@ -1030,7 +1068,7 @@
         function toggleFullscreen() {
             triggerHaptic();
             // --- ENABLE WAKE LOCK (VIDEO HACK FOR iOS) ---
-            // Trigger video play specifically on this user interaction
+            // Trigger video play specifically on this user interaction click
             requestWakeLock();
 
             if (!document.fullscreenElement) {
@@ -1053,6 +1091,18 @@
                 
                 // Only release lock if we are NOT running a timer/alarm
                 if (!isRunning && !alarmTargetTime) releaseWakeLock();
+            }
+        });
+        
+        // --- VISIBILITY CHANGE HANDLER (Re-acquire Lock on Android) ---
+        // If the user minimizes Chrome and comes back, the wake lock is often lost.
+        // We check if we *should* have it, and ask for it again.
+        document.addEventListener("visibilitychange", async () => {
+            if (document.visibilityState === 'visible') {
+                const isFullscreen = mainPanel.classList.contains('fullscreen-mode') || document.fullscreenElement;
+                if (isFullscreen || isRunning || alarmTargetTime) {
+                   await requestWakeLock();
+                }
             }
         });
 
@@ -1213,14 +1263,24 @@
             // 1. Try Standard API (Android/Desktop)
             if ('wakeLock' in navigator) {
                 try { 
-                    wakeLock = await navigator.wakeLock.request('screen'); 
-                } catch (err) { console.log('WakeLock API unavailable'); }
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    // If lock is lost (e.g. system revokes it), clear variable
+                    wakeLock.addEventListener('release', () => {
+                        wakeLock = null;
+                        console.log('Wake Lock Released by System');
+                    });
+                } catch (err) { console.log('WakeLock API unavailable/rejected'); }
             }
             
-            // 2. Try Video Hack (iOS/Safari)
+            // 2. Try Video Hack (iOS/Safari/Android Chrome Backup)
             // This plays the hidden video to force the screen to stay on
             if(wakeLockVideo && wakeLockVideo.paused) {
-                wakeLockVideo.play().catch(e => console.log("iOS WakeLock User Interaction Required"));
+                // Attempt to play. Must originate from user gesture initially.
+                try {
+                    await wakeLockVideo.play();
+                } catch(e) { 
+                    console.log("WakeLock Video: Interaction required"); 
+                }
             }
         }
 
@@ -1235,6 +1295,25 @@
                 wakeLockVideo.pause();
             }
         }
+
+        // --- HEARTBEAT TO PREVENT DIMMING ---
+        // Android Chrome sometimes sleeps even with wake lock if no media plays.
+        // We force check every few seconds.
+        setInterval(() => {
+            const isFullscreen = mainPanel.classList.contains('fullscreen-mode') || document.fullscreenElement;
+            const isActive = isRunning || alarmTargetTime;
+
+            if (isFullscreen || isActive) {
+                // A. Re-request API lock if it was dropped
+                if (!wakeLock) {
+                    requestWakeLock();
+                }
+                // B. Force the video to keep playing (Crucial for Android/iOS)
+                if (wakeLockVideo && wakeLockVideo.paused) {
+                    wakeLockVideo.play().catch(e => console.log("Re-triggering video wake lock"));
+                }
+            }
+        }, 4000); // Check every 4 seconds
 
         function triggerHaptic(pattern = 15) {
             if (navigator.vibrate) navigator.vibrate(pattern);
@@ -1352,6 +1431,9 @@
             isAlarmRinging = true;
             els.snoozeBtn.classList.remove('hidden');
             
+            // --- BLINK ANIMATION ---
+            els.display.classList.add('blink-alarm');
+
             // Get current decay for Sync
             const decay = parseFloat(els.slider.value);
             
@@ -1372,6 +1454,9 @@
         function stopAlarmSound() {
             if(beepLoop) { clearInterval(beepLoop); beepLoop = null; }
             isAlarmRinging = false;
+            
+            // --- REMOVE BLINK ANIMATION ---
+            els.display.classList.remove('blink-alarm');
             
             // Disable breathing animation
             mainPanel.classList.remove('alarm-breathing');
@@ -1475,7 +1560,8 @@
             
             // ONLY release wake lock if we are NOT in fullscreen
             // This ensures "Clock Mode" (which runs nothing) stays awake in fullscreen
-            if (!document.fullscreenElement) {
+            // because the Fullscreen mode relies on the video loop or API staying active.
+            if (!document.fullscreenElement && !mainPanel.classList.contains('fullscreen-mode')) {
                 releaseWakeLock();
             }
             
