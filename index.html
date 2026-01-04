@@ -733,6 +733,34 @@
             z-index: -9999;
         }
 
+        /* --- TIMER COMPLETE BLINK ANIMATION --- */
+        @keyframes text-alarm-blink {
+            0%, 100% { 
+                opacity: 1; 
+                color: var(--neon-red);
+                text-shadow: 0 0 40px var(--neon-red), 0 0 10px rgba(255, 0, 85, 0.8);
+            }
+            50% { 
+                opacity: 0.1; 
+                color: var(--text-muted);
+                text-shadow: none;
+            }
+        }
+
+        .blink-alarm {
+            animation: text-alarm-blink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            /* Ensure color overrides gradient text in light/dark mode */
+            -webkit-text-fill-color: initial !important; 
+            background: none !important;
+        }
+
+        /* Ensure it looks correct in Fullscreen OLED mode */
+        .glass-panel.fullscreen-mode .digital-display.blink-alarm {
+            color: var(--neon-red) !important;
+            -webkit-text-fill-color: var(--neon-red) !important;
+            text-shadow: 0 0 50px var(--neon-red);
+        }
+
         /* =========================================
            MOBILE OPTIMIZATIONS + OLED BLACK MODE
            ========================================= */
@@ -1362,6 +1390,9 @@
             isAlarmRinging = true;
             els.snoozeBtn.classList.remove('hidden');
             
+            // --- BLINK ANIMATION ---
+            els.display.classList.add('blink-alarm');
+
             // Get current decay for Sync
             const decay = parseFloat(els.slider.value);
             
@@ -1382,6 +1413,9 @@
         function stopAlarmSound() {
             if(beepLoop) { clearInterval(beepLoop); beepLoop = null; }
             isAlarmRinging = false;
+            
+            // --- REMOVE BLINK ANIMATION ---
+            els.display.classList.remove('blink-alarm');
             
             // Disable breathing animation
             mainPanel.classList.remove('alarm-breathing');
